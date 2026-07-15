@@ -1,8 +1,8 @@
 import type { DiagnosticResult } from "../models/Diagnostic";
-import type { ReferenceTarget } from "../references/ReferenceTarget";
+import type { ReferenceRegistry } from "../references/ReferenceRegistry";
 
 export interface SourceTransformContext {
-    references: ReferenceTarget[];
+    references: ReferenceRegistry[];
 }
 
 export type SourceTransformer = (

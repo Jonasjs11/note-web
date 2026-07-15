@@ -8,6 +8,7 @@ import type { SourceTransformer } from "./Transformer";
 import { transformLatexMath } from "./transformLatexSyntax";
 import { transformConceptCommands } from "./transformConceptCommands";
 
+import { ReferenceRegistry } from "../references/ReferenceRegistry";
 import type { ReferenceTarget } from "../references/ReferenceTarget";
 
 import { transformReferenceCommands } from "./transformReferenceCommands";
@@ -24,7 +25,8 @@ export function transformSource(
     const diagnostics: Diagnostic[] = [];
 
     const context = {
-        references,
+        referenceRegistry:
+            new ReferenceRegistry(references),
     };
 
     for (const transformer of transformers) {

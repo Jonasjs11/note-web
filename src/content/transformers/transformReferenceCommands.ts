@@ -10,10 +10,11 @@ import {
 
 import { findClosestMatch } from "../diagnostics/findClosestMatch";
 import { getSourceLocation } from "../parser/getSourceLocation";
-import type { ReferenceTarget } from "../references/ReferenceTarget";
 
 import type { SourceTransformContext } from "./Transformer";
 import { transformMarkdownText } from "./transformMarkdownText";
+
+import type { ReferenceRegistry } from "../references/ReferenceRegistry";
 
 export function transformReferenceCommands(
     source: string,
@@ -22,12 +23,7 @@ export function transformReferenceCommands(
 ): DiagnosticResult<string> {
     const diagnostics: Diagnostic[] = [];
 
-    const targetsByLabel = new Map(
-        context.references.map((target) => [
-            target.label,
-            target,
-        ]),
-    );
+    const registry = context.referenceRegistry;
 
     let transformedSource = transformMarkdownText(
         source,
@@ -37,7 +33,7 @@ export function transformReferenceCommands(
                 source,
                 filePath,
                 sourceOffset,
-                targetsByLabel,
+                registry,
                 diagnostics,
             );
         },
@@ -45,7 +41,7 @@ export function transformReferenceCommands(
 
     transformedSource = addEquationAnchors(
         transformedSource,
-        targetsByLabel,
+        registry,
     );
 
     return {
@@ -59,10 +55,7 @@ function transformReferencesInText(
     completeSource: string,
     filePath: string,
     sourceOffset: number,
-    targetsByLabel: ReadonlyMap<
-        string,
-        ReferenceTarget
-    >,
+    registry: ReferenceRegistry,
     diagnostics: Diagnostic[],
 ): string {
     const referencePattern =
@@ -96,15 +89,14 @@ function transformReferencesInText(
                 return fullMatch;
             }
 
-            const target =
-                targetsByLabel.get(label);
+            const target = registry.find(label);
 
             if (!target) {
                 const suggestion =
                     findClosestMatch(
                         label,
                         [
-                            ...targetsByLabel.keys(),
+                            ...registry.labels(),
                         ],
                     );
 
@@ -144,10 +136,7 @@ function transformReferencesInText(
 
 function addEquationAnchors(
     source: string,
-    targetsByLabel: ReadonlyMap<
-        string,
-        ReferenceTarget
-    >,
+    registry: ReferenceRegistry,
 ): string {
     const equationPattern =
         /\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g;
@@ -164,11 +153,9 @@ function addEquationAnchors(
                 return environment;
             }
 
-            const label =
-                labelMatch[1].trim();
+            const label = labelMatch[1].trim();
 
-            const target =
-                targetsByLabel.get(label);
+            const target = registry.find(label);
 
             if (!target) {
                 return environment;
