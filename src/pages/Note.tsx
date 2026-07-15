@@ -68,7 +68,7 @@ export default function Note() {
                 />
             )}
 
-            <MarkdownRenderer source={note.source} />
+            <MarkdownRenderer source={note.transformedSource} />
         </>
     );
 }

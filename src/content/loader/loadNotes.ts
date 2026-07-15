@@ -1,5 +1,6 @@
 import type { Note } from "../models/Note";
 import { parseNoteTitle } from "../parser/parseNoteTitle";
+import { transformSource } from "../transformers/transformSource";
 
 const noteFiles = import.meta.glob(
     "../notes/**/*.mdx",
@@ -27,6 +28,8 @@ function createNote(
     const segments = relativePath.split("/");
 
     const titleResult = parseNoteTitle(source, filePath);
+
+    const transformationResult = transformSource(source, filePath);
 
     if (segments.length < 2) {
         throw new Error(
@@ -57,9 +60,14 @@ function createNote(
 
         url: `/${segments.join("/")}`,
         filePath,
-        source,
 
-        diagnostics: titleResult.diagnostics,
+        source,
+        transformedSource: transformationResult.value,
+
+        diagnostics: [
+            ...titleResult.diagnostics,
+            ...transformationResult.diagnostics,
+        ],
     };
 }
 

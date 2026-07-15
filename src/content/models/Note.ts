@@ -9,7 +9,9 @@ export interface Note {
 
     url: string;
     filePath: string;
+
     source: string;
+    transformedSource: string;
 
     diagnostics: Diagnostic[];
 }
