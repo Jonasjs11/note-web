@@ -10,6 +10,15 @@ import remarkMath from "remark-math";
 
 import "./MarkdownRenderer.css";
 
+import type { Components } from "react-markdown";
+
+import CommandTokenComponent from "./CommandTokenComponent";
+import rehypeCommandTokens from "../../content/commands/rehypeCommandTokens";
+
+const markdownComponents = {
+    "command-token": CommandTokenComponent,
+} as unknown as Components;
+
 interface MarkdownRendererProps {
     source: string;
 }
@@ -74,8 +83,10 @@ export default function MarkdownRenderer({
                     remarkMath,
                 ]}
                 rehypePlugins={[
+                    rehypeCommandTokens,
                     rehypeMathjax,
                 ]}
+                components={markdownComponents}
                 skipHtml
             >
                 {source}

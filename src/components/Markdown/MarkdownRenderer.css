@@ -118,3 +118,19 @@
     margin: 1.5rem 0;
     padding: 0.25rem 0;
 }
+
+.concept-link {
+    color: #8ab4f8;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 0.2em;
+}
+
+.concept-link:hover {
+    color: white;
+}
+
+.command-error {
+    color: #ff8a80;
+    font-family: Consolas, "Courier New", monospace;
+}

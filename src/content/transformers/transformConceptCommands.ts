@@ -3,8 +3,10 @@ import type {
     DiagnosticResult,
 } from "../models/Diagnostic";
 
-import { createConceptToken, encodeCommandToken  } from "../commands/CommandToken";
+import { createConceptToken } from "../commands/CommandToken";
 import { getSourceLocation } from "../parser/getSourceLocation";
+
+import { transformMarkdownText } from "./transformMarkdownText";
 
 export function transformConceptCommands(
     source: string,
@@ -12,10 +14,36 @@ export function transformConceptCommands(
 ): DiagnosticResult<string> {
     const diagnostics: Diagnostic[] = [];
 
+    const transformedSource = transformMarkdownText(
+        source,
+        (text, sourceOffset) => {
+            return transformConceptsInText(
+                text,
+                filePath,
+                source,
+                sourceOffset,
+                diagnostics,
+            );
+        },
+    );
+
+    return {
+        value: transformedSource,
+        diagnostics,
+    };
+}
+
+function transformConceptsInText(
+    text: string,
+    filePath: string,
+    completeSource: string,
+    sourceOffset: number,
+    diagnostics: Diagnostic[],
+): string {
     const commandPattern =
         /\\concept\{([^{}]*)\}(?:\[([^\]]*)\])?/g;
 
-    const transformedSource = source.replace(
+    return text.replace(
         commandPattern,
         (
             fullMatch: string,
@@ -26,6 +54,9 @@ export function transformConceptCommands(
             const id = rawId.trim();
             const alias = rawAlias?.trim();
 
+            const absoluteMatchIndex =
+                sourceOffset + matchIndex;
+
             if (!id) {
                 diagnostics.push({
                     severity: "error",
@@ -33,8 +64,8 @@ export function transformConceptCommands(
                         "A concept command must contain a concept ID.",
                     filePath,
                     location: getSourceLocation(
-                        source,
-                        matchIndex,
+                        completeSource,
+                        absoluteMatchIndex,
                     ),
                 });
 
@@ -51,8 +82,8 @@ export function transformConceptCommands(
                         "The concept alias is empty and will be ignored.",
                     filePath,
                     location: getSourceLocation(
-                        source,
-                        matchIndex,
+                        completeSource,
+                        absoluteMatchIndex,
                     ),
                 });
             }
@@ -66,9 +97,4 @@ export function transformConceptCommands(
             });
         },
     );
-
-    return {
-        value: transformedSource,
-        diagnostics,
-    };
 }
