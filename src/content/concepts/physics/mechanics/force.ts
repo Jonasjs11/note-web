@@ -34,6 +34,8 @@ The SI unit of force is the **newton**, written as $\mathrm{N}$.
         "acceleration",
         "vector",
     ],
+
+    illustration: "/illustrations/force.svg",
 };
 
 export default force;
