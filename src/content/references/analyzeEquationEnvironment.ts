@@ -1,8 +1,14 @@
-import type { Diagnostic } from "../models/Diagnostic";
+import type {
+    Diagnostic,
+} from "../models/Diagnostic";
 
 import {
     analyzeNumberedObjectLabels,
 } from "./analyzeNumberedObjectLabels";
+
+import type {
+    NumberedEquation,
+} from "./NumberedEquation";
 
 import type {
     ReferenceNumber,
@@ -16,7 +22,13 @@ interface AnalyzeEquationEnvironmentOptions {
     environmentContent: string;
     environmentContentStart: number;
 
+    environmentStart: number;
+    environmentEnd: number;
+
     number: ReferenceNumber;
+    subequationGroup?: number;
+
+    numberedEquations: NumberedEquation[];
 
     targetsByLabel: Map<
         string,
@@ -32,26 +44,42 @@ export function analyzeEquationEnvironment({
     filePath,
     environmentContent,
     environmentContentStart,
+    environmentStart,
+    environmentEnd,
     number,
+    subequationGroup,
+    numberedEquations,
     targetsByLabel,
     targets,
     diagnostics,
 }: AnalyzeEquationEnvironmentOptions): void {
-    analyzeNumberedObjectLabels({
-        completeSource,
-        filePath,
+    const label =
+        analyzeNumberedObjectLabels({
+            completeSource,
+            filePath,
 
-        objectSource:
-            environmentContent,
+            objectSource:
+                environmentContent,
 
-        objectStart:
-            environmentContentStart,
+            objectStart:
+                environmentContentStart,
 
+            number,
+            objectDescription: "equation",
+
+            targetsByLabel,
+            targets,
+            diagnostics,
+        });
+
+    numberedEquations.push({
+        kind: "equation",
         number,
-        objectDescription: "equation",
+        label,
 
-        targetsByLabel,
-        targets,
-        diagnostics,
+        sourceStart: environmentStart,
+        sourceEnd: environmentEnd,
+
+        subequationGroup,
     });
 }

@@ -42,7 +42,7 @@ export function analyzeNumberedObjectLabels({
     targetsByLabel,
     targets,
     diagnostics,
-}: AnalyzeNumberedObjectLabelsOptions): void {
+}: AnalyzeNumberedObjectLabelsOptions): string | undefined {
     const labelPattern =
         /\\label\{([^{}]*)\}/g;
 
@@ -53,7 +53,7 @@ export function analyzeNumberedObjectLabels({
     ];
 
     if (labelMatches.length === 0) {
-        return;
+        return undefined;
     }
 
     if (labelMatches.length > 1) {
@@ -99,7 +99,7 @@ export function analyzeNumberedObjectLabels({
             ),
         });
 
-        return;
+        return undefined;
     }
 
     if (!label.startsWith("eq:")) {
@@ -128,7 +128,7 @@ export function analyzeNumberedObjectLabels({
             ),
         });
 
-        return;
+        return undefined;
     }
 
     const target: ReferenceTarget = {
@@ -140,4 +140,6 @@ export function analyzeNumberedObjectLabels({
 
     targetsByLabel.set(label, target);
     targets.push(target);
+    
+    return label;
 }

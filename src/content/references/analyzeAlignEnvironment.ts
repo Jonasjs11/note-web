@@ -1,4 +1,6 @@
-import type { Diagnostic } from "../models/Diagnostic";
+import type {
+    Diagnostic,
+} from "../models/Diagnostic";
 
 import {
     analyzeNumberedObjectLabels,
@@ -7,6 +9,10 @@ import {
 import type {
     EquationNumbering,
 } from "./EquationNumbering";
+
+import type {
+    NumberedEquation,
+} from "./NumberedEquation";
 
 import type {
     ReferenceTarget,
@@ -24,6 +30,9 @@ interface AnalyzeAlignEnvironmentOptions {
     environmentContentStart: number;
 
     numbering: EquationNumbering;
+    subequationGroup?: number;
+
+    numberedEquations: NumberedEquation[];
 
     targetsByLabel: Map<
         string,
@@ -34,19 +43,14 @@ interface AnalyzeAlignEnvironmentOptions {
     diagnostics: Diagnostic[];
 }
 
-/**
- * Analyzes every numbered row in one align
- * environment.
- *
- * The numbering object determines whether rows
- * receive ordinary or subequation numbers.
- */
 export function analyzeAlignEnvironment({
     completeSource,
     filePath,
     environmentContent,
     environmentContentStart,
     numbering,
+    subequationGroup,
+    numberedEquations,
     targetsByLabel,
     targets,
     diagnostics,
@@ -58,22 +62,40 @@ export function analyzeAlignEnvironment({
     for (const row of rows) {
         const number = numbering.next();
 
-        analyzeNumberedObjectLabels({
-            completeSource,
-            filePath,
+        const label =
+            analyzeNumberedObjectLabels({
+                completeSource,
+                filePath,
 
-            objectSource: row.source,
+                objectSource: row.source,
 
-            objectStart:
+                objectStart:
+                    environmentContentStart +
+                    row.startOffset,
+
+                number,
+                objectDescription:
+                    "align row",
+
+                targetsByLabel,
+                targets,
+                diagnostics,
+            });
+
+        numberedEquations.push({
+            kind: "align-row",
+            number,
+            label,
+
+            sourceStart:
                 environmentContentStart +
                 row.startOffset,
 
-            number,
-            objectDescription: "align row",
+            sourceEnd:
+                environmentContentStart +
+                row.endOffset,
 
-            targetsByLabel,
-            targets,
-            diagnostics,
+            subequationGroup,
         });
     }
 }

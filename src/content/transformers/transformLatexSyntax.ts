@@ -1,10 +1,20 @@
 import type { DiagnosticResult } from "../models/Diagnostic";
 
-export function transformLatexMath(
+import {
+    transformEquationNumbers,
+} from "./transformEquationNumbers";
+
+export function transformLatexSyntax(
     source: string,
-    _filePath: string,
+    filePath: string,
+    context: SourceTransformContext,
 ): DiagnosticResult<string> {
     let transformedSource = source;
+
+    transformedSource = transformEquationNumbers(
+        source,
+        context.numberedEquations,
+    );
 
     transformedSource = transformDisplayDelimiters(
         transformedSource,
@@ -31,25 +41,20 @@ function transformDisplayDelimiters(
     );
 }
 
+const mathEnvironmentPattern =
+    /\\begin\{(equation|align)(\*)?\}[\s\S]*?\\end\{\1\2\}/g;
+
 function transformMathEnvironments(
     source: string,
 ): string {
-    const environmentPattern =
-        /\\begin\{(equation\*?|align\*?)\}([\s\S]*?)\\end\{\1\}/g;
-
     return source.replace(
-        environmentPattern,
-        (
-            _match,
-            environment: string,
-            content: string,
-        ) => {
-            const latex =
-                `\\begin{${environment}}\n` +
-                `${content.trim()}\n` +
-                `\\end{${environment}}`;
-
-            return `\n\n$$\n${latex}\n$$\n\n`;
+        mathEnvironmentPattern,
+        (environment) => {
+            return (
+                "\n\n$$\n" +
+                environment +
+                "\n$$\n\n"
+            );
         },
     );
 }

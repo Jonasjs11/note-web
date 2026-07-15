@@ -42,16 +42,37 @@ a
 
 a
 a
+
 \begin{equation}
 a=b
-\label{eq:first}
-\label{eq:second}
+\label{eq:before}
 \end{equation}
+
+\begin{subequations}
+
 \begin{align}
-x&=y\\
-y&=x
-\label{eq:first}
+F &= ma
+\label{eq:newton}
+\\
+p &= mv
+
+\\
+E &= mc^2
+\label{eq:momentum}
 \end{align}
+
+\end{subequations}
+
+\begin{equation}
+c=d
+\label{eq:after}
+\end{equation}
+
+\cref{eq:before}
+\cref{eq:newton}
+\cref{eq:momentum}
+\cref{eq:after}
+
 a
 
 a

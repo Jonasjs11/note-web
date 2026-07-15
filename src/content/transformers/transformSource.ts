@@ -5,7 +5,7 @@ import type {
 
 import type { SourceTransformer } from "./Transformer";
 
-import { transformLatexMath } from "./transformLatexSyntax";
+import { transformLatexSyntax } from "./transformLatexSyntax";
 import { transformConceptCommands } from "./transformConceptCommands";
 
 import { ReferenceRegistry } from "../references/ReferenceRegistry";
@@ -13,12 +13,17 @@ import type { ReferenceTarget } from "../references/ReferenceTarget";
 
 import { transformReferenceCommands } from "./transformReferenceCommands";
 
-const transformers: SourceTransformer[] = [transformConceptCommands, transformReferenceCommands, transformLatexMath];
+import type {
+    NumberedEquation,
+} from "../references/NumberedEquation";
+
+const transformers: SourceTransformer[] = [transformConceptCommands, transformReferenceCommands, transformLatexSyntax];
 
 export function transformSource(
     source: string,
     filePath: string,
     references: ReferenceTarget[] = [],
+    numberedEquations: NumberedEquation[] = [],
 ): DiagnosticResult<string> {
     let transformedSource = source;
 
@@ -27,6 +32,8 @@ export function transformSource(
     const context = {
         referenceRegistry:
             new ReferenceRegistry(references),
+
+        numberedEquations,
     };
 
     for (const transformer of transformers) {

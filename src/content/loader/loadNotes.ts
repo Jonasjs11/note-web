@@ -33,7 +33,13 @@ function createNote(
 
     const referenceAnalysis = analyzeEquationTargets(source, filePath);
 
-    const transformationResult = transformSource(source, filePath, referenceAnalysis.targets);
+    const transformationResult =
+    transformSource(
+        source,
+        filePath,
+        referenceAnalysis.targets,
+        referenceAnalysis.numberedEquations,
+    );
 
     if (segments.length < 2) {
         throw new Error(
