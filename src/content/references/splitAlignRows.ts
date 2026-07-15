@@ -1,18 +1,19 @@
+export interface AlignRowInfo {
+    source: string;
+    startOffset: number;
+    endOffset: number;
+}
+
 /**
  * Splits the contents of an align environment into numbered rows.
  *
- * It splits at top-level LaTeX line breaks:
- *
- *     \\
- *
- * Line breaks inside brace groups are ignored.
- *
- * Empty rows are removed.
+ * Offsets are relative to the beginning of the align environment's
+ * content, not the complete note.
  */
 export function splitAlignRows(
     content: string,
-): string[] {
-    const rows: string[] = [];
+): AlignRowInfo[] {
+    const rows: AlignRowInfo[] = [];
 
     let rowStart = 0;
     let braceDepth = 0;
@@ -56,22 +57,13 @@ export function splitAlignRows(
 
         addRow(
             rows,
-            content.slice(
-                rowStart,
-                index,
-            ),
+            content,
+            rowStart,
+            index,
         );
 
         index += 2;
 
-        /*
-         * An align row break may have an optional
-         * vertical-spacing argument:
-         *
-         *     \\[0.5rem]
-         *
-         * It belongs to the separator, not the next row.
-         */
         index = skipOptionalSpacingArgument(
             content,
             index,
@@ -82,21 +74,87 @@ export function splitAlignRows(
 
     addRow(
         rows,
-        content.slice(rowStart),
+        content,
+        rowStart,
+        content.length,
     );
 
     return rows;
 }
 
 function addRow(
-    rows: string[],
-    rawRow: string,
+    rows: AlignRowInfo[],
+    content: string,
+    rawStartOffset: number,
+    rawEndOffset: number,
 ): void {
-    const row = rawRow.trim();
+    const trimmedRange = trimRange(
+        content,
+        rawStartOffset,
+        rawEndOffset,
+    );
 
-    if (row.length > 0) {
-        rows.push(row);
+    if (
+        trimmedRange.startOffset ===
+        trimmedRange.endOffset
+    ) {
+        return;
     }
+
+    rows.push({
+        source: content.slice(
+            trimmedRange.startOffset,
+            trimmedRange.endOffset,
+        ),
+        startOffset:
+            trimmedRange.startOffset,
+        endOffset:
+            trimmedRange.endOffset,
+    });
+}
+
+function trimRange(
+    content: string,
+    startOffset: number,
+    endOffset: number,
+): {
+    startOffset: number;
+    endOffset: number;
+} {
+    let trimmedStart = startOffset;
+    let trimmedEnd = endOffset;
+
+    while (
+        trimmedStart < trimmedEnd &&
+        isWhitespace(content[trimmedStart])
+    ) {
+        trimmedStart++;
+    }
+
+    while (
+        trimmedEnd > trimmedStart &&
+        isWhitespace(
+            content[trimmedEnd - 1],
+        )
+    ) {
+        trimmedEnd--;
+    }
+
+    return {
+        startOffset: trimmedStart,
+        endOffset: trimmedEnd,
+    };
+}
+
+function isWhitespace(
+    character: string,
+): boolean {
+    return (
+        character === " " ||
+        character === "\t" ||
+        character === "\n" ||
+        character === "\r"
+    );
 }
 
 function skipOptionalSpacingArgument(

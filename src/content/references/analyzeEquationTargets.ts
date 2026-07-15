@@ -44,20 +44,21 @@ export function analyzeEquationTargets(
             environmentMatch.index;
 
         if (environmentType === "align") {
-            const rows =
-                splitAlignRows(
-                    environmentContent,
-                );
+            const rows = splitAlignRows(
+                environmentContent,
+            );
+
+            console.log(
+                "Align rows:",
+                rows,
+            );
 
             equationNumber += rows.length;
 
             /*
-             * Labels inside align rows are deliberately
-             * not processed yet.
-             *
-             * For this milestone, align only contributes
-             * numbered rows to the equation sequence.
-             */
+            * Labels inside align rows are processed
+            * in the next feature.
+            */
             continue;
         }
 
