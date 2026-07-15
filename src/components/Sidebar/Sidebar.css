@@ -3,8 +3,36 @@
 }
 
 .navigation-node {
-    padding: 0.4rem 1rem;
-    padding-left: calc(
-        1rem + var(--navigation-depth) * 1.25rem
-    );
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    width: 100%;
+    min-height: 2rem;
+
+    padding-top: 0.35rem;
+    padding-right: 1rem;
+    padding-bottom: 0.35rem;
+
+    border: none;
+
+    color: inherit;
+    background: transparent;
+
+    font: inherit;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.navigation-node:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.navigation-arrow {
+    display: inline-block;
+    width: 1rem;
+
+    font-size: 0.7rem;
+    text-align: center;
 }

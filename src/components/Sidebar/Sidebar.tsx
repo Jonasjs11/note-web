@@ -1,38 +1,55 @@
-import type { CSSProperties } from "react";
+import { useState } from "react";
 
 import { navigation } from "../../app/navigation";
 import type { NavigationItem } from "../../types/Navigation";
 
 import "./Sidebar.css";
 
-interface NavigationNodeProps {
+function NavigationNode({
+    item,
+    depth,
+}: {
     item: NavigationItem;
     depth: number;
-}
+}) {
+    const isFolder = Boolean(item.children?.length);
 
-function NavigationNode({ item, depth }: NavigationNodeProps) {
-    const indentationStyle = {
-        "--navigation-depth": depth,
-    } as CSSProperties;
-    const isFolder = item.children !== undefined;
+    const [isExpanded, setIsExpanded] = useState(true); // true means start expanded
+
+    function handleClick() {
+        if (isFolder) {
+            setIsExpanded((currentlyExpanded) => !currentlyExpanded); //Reverse the expanded state on click
+        }
+    }
 
     return (
         <div>
-            <div
+            <button
                 className="navigation-node"
-                style={indentationStyle}
+                style={{
+                    paddingLeft: `${16 + depth * 20}px`,
+                }}
+                onClick={handleClick}
+                type="button"
             >
-                {isFolder ? "📁" : "📄"}
-                {item.title}
-            </div>
+                <span className="navigation-arrow">
+                    {isFolder ? (isExpanded ? "▼" : "▶") : ""}
+                </span>
 
-            {item.children?.map((child) => (
-                <NavigationNode
-                    key={child.path ?? `${depth}-${child.title}`}
-                    item={child}
-                    depth={depth + 1}
-                />
-            ))}
+                <span>{item.title}</span>
+            </button>
+
+            {isFolder && isExpanded && (
+                <div>
+                    {item.children?.map((child) => (
+                        <NavigationNode
+                            key={child.path ?? child.title}
+                            item={child}
+                            depth={depth + 1}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
