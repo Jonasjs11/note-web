@@ -68,7 +68,10 @@ export default function Note() {
                 />
             )}
 
-            <MarkdownRenderer source={note.transformedSource} />
+            <MarkdownRenderer
+                key={note.url}
+                source={note.transformedSource}
+            />
         </>
     );
 }

@@ -5,7 +5,9 @@ import type {
 
 import type { SourceTransformer } from "./Transformer";
 
-const transformers: SourceTransformer[] = [];
+import { transformLatexMath } from "./transformLatexSyntax";
+
+const transformers: SourceTransformer[] = [transformLatexMath];
 
 export function transformSource(
     source: string,
