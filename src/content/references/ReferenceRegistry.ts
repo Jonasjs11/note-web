@@ -23,6 +23,14 @@ export class ReferenceRegistry {
         );
     }
 
+    public findMany(
+        labels: string[],
+    ): Array<ReferenceTarget | undefined> {
+        return labels.map((label) => {
+            return this.find(label);
+        });
+    }
+
     public has(label: string): boolean {
         return this.targetsByLabel.has(
             normalizeLabel(label),
@@ -40,6 +48,8 @@ export class ReferenceRegistry {
             ...this.targetsByLabel.values(),
         ];
     }
+
+
 }
 
 function normalizeLabel(

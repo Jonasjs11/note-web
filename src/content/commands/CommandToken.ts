@@ -1,3 +1,5 @@
+import type { ReferenceType } from "../references/ReferenceTarget";
+
 export const TOKEN_START = "\uE000";
 export const TOKEN_END = "\uE001";
 
@@ -54,20 +56,32 @@ export function createConceptToken(
     );
 }
 
-export interface ReferenceCommandData {
+export interface ReferenceTokenTarget {
+    type: ReferenceType;
     anchorId: string;
-    text: string;
+    number: string;
+}
+
+export interface ReferenceCommandData {
+    capitalize: boolean;
+    targets: ReferenceTokenTarget[];
 }
 
 export function createReferenceToken(
     data: ReferenceCommandData,
 ): string {
+    const arguments_ = [
+        data.capitalize ? "true" : "false",
+        ...data.targets.flatMap((target) => [
+            target.type,
+            target.anchorId,
+            target.number,
+        ]),
+    ];
+
     return encodeCommandToken(
         "reference",
-        [
-            data.anchorId,
-            data.text,
-        ],
+        arguments_,
     );
 }
 

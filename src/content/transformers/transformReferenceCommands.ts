@@ -15,6 +15,8 @@ import type { SourceTransformContext } from "./Transformer";
 import { transformMarkdownText } from "./transformMarkdownText";
 
 import type { ReferenceRegistry } from "../references/ReferenceRegistry";
+import { formatReferenceNumber } from "../references/formatReferenceNumber";
+import type { ReferenceTarget } from "../references/ReferenceTarget";
 
 export function transformReferenceCommands(
     source: string,
@@ -66,19 +68,22 @@ function transformReferencesInText(
         (
             fullMatch: string,
             capitalization: "c" | "C",
-            rawLabel: string,
+            rawLabels: string,
             matchIndex: number,
         ) => {
-            const label = rawLabel.trim();
-
             const absoluteMatchIndex =
                 sourceOffset + matchIndex;
 
-            if (!label) {
+            const labels = rawLabels
+                .split(",")
+                .map((label) => label.trim())
+                .filter(Boolean);
+
+            if (labels.length === 0) {
                 diagnostics.push({
                     severity: "error",
                     message:
-                        "A reference command must contain a label.",
+                        "A reference command must contain at least one label.",
                     filePath,
                     location: getSourceLocation(
                         completeSource,
@@ -89,15 +94,29 @@ function transformReferencesInText(
                 return fullMatch;
             }
 
-            const target = registry.find(label);
+            const targets =
+                registry.findMany(labels);
 
-            if (!target) {
+            let containsErrors = false;
+
+            for (
+                let index = 0;
+                index < labels.length;
+                index++
+            ) {
+                const label = labels[index];
+                const target = targets[index];
+
+                if (target) {
+                    continue;
+                }
+
+                containsErrors = true;
+
                 const suggestion =
                     findClosestMatch(
                         label,
-                        [
-                            ...registry.labels(),
-                        ],
+                        registry.labels(),
                     );
 
                 const suggestionText =
@@ -116,19 +135,35 @@ function transformReferencesInText(
                         absoluteMatchIndex,
                     ),
                 });
+            }
 
+            if (containsErrors) {
                 return fullMatch;
             }
 
-            const text =
-                formatReferenceText(
+            const validTargets = targets.filter(
+                (
                     target,
-                    capitalization === "C",
-                );
+                ): target is ReferenceTarget => {
+                    return target !== undefined;
+                },
+            );
 
             return createReferenceToken({
-                anchorId: target.anchorId,
-                text,
+                capitalize:
+                    capitalization === "C",
+
+                targets: validTargets.map(
+                    (target) => ({
+                        type: target.type,
+                        anchorId:
+                            target.anchorId,
+                        number:
+                            formatReferenceNumber(
+                                target.number,
+                            ),
+                    }),
+                ),
             });
         },
     );
@@ -170,59 +205,5 @@ function addEquationAnchors(
                 environment
             );
         },
-    );
-}
-
-function formatReferenceText(
-    target: ReferenceTarget,
-    capitalize: boolean,
-): string {
-    const typeName =
-        getReferenceTypeName(target);
-
-    const number =
-        formatReferenceNumber(
-            target.number,
-        );
-
-    const text = `${typeName} ${number}`;
-
-    if (!capitalize) {
-        return text;
-    }
-
-    return (
-        text.charAt(0).toUpperCase() +
-        text.slice(1)
-    );
-}
-
-function getReferenceTypeName(
-    target: ReferenceTarget,
-): string {
-    switch (target.type) {
-        case "equation":
-            return "equation";
-
-        case "figure":
-            return "figure";
-
-        case "table":
-            return "table";
-
-        case "section":
-            return "section";
-    }
-}
-
-function formatReferenceNumber(
-    number: {
-        primary: number;
-        sub?: string;
-    },
-): string {
-    return (
-        number.primary.toString() +
-        (number.sub ?? "")
     );
 }
