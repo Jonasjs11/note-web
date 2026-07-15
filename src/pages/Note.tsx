@@ -4,6 +4,8 @@ import { notes } from "../content/loader/loadNotes";
 
 import type { Diagnostic } from "../content/models/Diagnostic";
 
+import MarkdownRenderer from "../components/Markdown/MarkdownRenderer";
+
 export default function Note() {
     const location = useLocation();
 
@@ -31,7 +33,6 @@ export default function Note() {
     const warnings = note.diagnostics.filter(
         diagnostic => diagnostic.severity === "warning",
     );
-    
 
     if (errors.length > 0) {
         return (
@@ -60,8 +61,6 @@ export default function Note() {
 
     return (
         <>
-            <h1>{note.title}</h1>
-
             {warnings.length > 0 && (
                 <DiagnosticList
                     title="Warnings"
@@ -69,34 +68,9 @@ export default function Note() {
                 />
             )}
 
-            <p>Subject: {formatTitle(note.subject)}</p>
-
-            {note.folders.length > 0 && (
-                <p>
-                    Folders:{" "}
-                    {note.folders
-                        .map(formatTitle)
-                        .join(" → ")}
-                </p>
-            )}
-
-            <p>
-                This page will eventually render:
-            </p>
-
-            <pre>{note.filePath}</pre>
+            <MarkdownRenderer source={note.source} />
         </>
     );
-}
-
-function formatTitle(value: string): string {
-    return value
-        .split(/[-_]/)
-        .filter(Boolean)
-        .map((word) => {
-            return word.charAt(0).toUpperCase() + word.slice(1);
-        })
-        .join(" ");
 }
 
 function DiagnosticList({

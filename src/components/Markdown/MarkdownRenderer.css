@@ -1,0 +1,108 @@
+.markdown {
+    max-width: 850px;
+    margin: 0 auto;
+
+    line-height: 1.7;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+    line-height: 1.25;
+}
+
+.markdown h1 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+}
+
+.markdown h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.markdown h3 {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.markdown p {
+    margin: 1rem 0;
+}
+
+.markdown ul,
+.markdown ol {
+    padding-left: 1.75rem;
+}
+
+.markdown li {
+    margin: 0.35rem 0;
+}
+
+.markdown blockquote {
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+
+    border-left: 4px solid rgba(255, 255, 255, 0.25);
+
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.markdown code {
+    padding: 0.15rem 0.35rem;
+
+    border-radius: 4px;
+
+    background: rgba(255, 255, 255, 0.1);
+
+    font-family: Consolas, "Courier New", monospace;
+}
+
+.markdown pre {
+    overflow-x: auto;
+
+    padding: 1rem;
+
+    border-radius: 6px;
+
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.markdown pre code {
+    padding: 0;
+
+    background: transparent;
+}
+
+.markdown a {
+    color: #8ab4f8;
+}
+
+.markdown table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    margin: 1.5rem 0;
+}
+
+.markdown th,
+.markdown td {
+    padding: 0.6rem 0.8rem;
+
+    border: 1px solid rgba(255, 255, 255, 0.18);
+
+    text-align: left;
+}
+
+.markdown img {
+    display: block;
+
+    max-width: 100%;
+    height: auto;
+
+    margin: 1.5rem auto;
+}
