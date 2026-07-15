@@ -8,7 +8,7 @@ import type { SourceTransformer } from "./Transformer";
 import { transformLatexMath } from "./transformLatexSyntax";
 import { transformConceptCommands } from "./transformConceptCommands";
 
-const transformers: SourceTransformer[] = [transformLatexMath, transformConceptCommands];
+const transformers: SourceTransformer[] = [transformConceptCommands, transformLatexMath];
 
 export function transformSource(
     source: string,

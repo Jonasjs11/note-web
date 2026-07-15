@@ -3,9 +3,14 @@ import type {
     DiagnosticResult,
 } from "../models/Diagnostic";
 
-import { createConceptToken } from "../commands/CommandToken";
-import { getSourceLocation } from "../parser/getSourceLocation";
+import {
+    findConcept,
+    getAllConceptIdentifiers,
+} from "../registry/conceptRegistry";
 
+import { createConceptToken } from "../commands/CommandToken";
+import { findClosestMatch } from "../diagnostics/findClosestMatch";
+import { getSourceLocation } from "../parser/getSourceLocation";
 import { transformMarkdownText } from "./transformMarkdownText";
 
 export function transformConceptCommands(
@@ -14,18 +19,19 @@ export function transformConceptCommands(
 ): DiagnosticResult<string> {
     const diagnostics: Diagnostic[] = [];
 
-    const transformedSource = transformMarkdownText(
-        source,
-        (text, sourceOffset) => {
-            return transformConceptsInText(
-                text,
-                filePath,
-                source,
-                sourceOffset,
-                diagnostics,
-            );
-        },
-    );
+    const transformedSource =
+        transformMarkdownText(
+            source,
+            (text, sourceOffset) => {
+                return transformConceptsInText(
+                    text,
+                    filePath,
+                    source,
+                    sourceOffset,
+                    diagnostics,
+                );
+            },
+        );
 
     return {
         value: transformedSource,
@@ -63,10 +69,41 @@ function transformConceptsInText(
                     message:
                         "A concept command must contain a concept ID.",
                     filePath,
-                    location: getSourceLocation(
-                        completeSource,
-                        absoluteMatchIndex,
-                    ),
+                    location:
+                        getSourceLocation(
+                            completeSource,
+                            absoluteMatchIndex,
+                        ),
+                });
+
+                return fullMatch;
+            }
+
+            const concept = findConcept(id);
+
+            if (!concept) {
+                const suggestion =
+                    findClosestMatch(
+                        id,
+                        getAllConceptIdentifiers(),
+                    );
+
+                const suggestionText =
+                    suggestion
+                        ? ` Did you mean "${suggestion}"?`
+                        : "";
+
+                diagnostics.push({
+                    severity: "error",
+                    message:
+                        `Unknown concept ID "${id}".` +
+                        suggestionText,
+                    filePath,
+                    location:
+                        getSourceLocation(
+                            completeSource,
+                            absoluteMatchIndex,
+                        ),
                 });
 
                 return fullMatch;
@@ -81,17 +118,19 @@ function transformConceptsInText(
                     message:
                         "The concept alias is empty and will be ignored.",
                     filePath,
-                    location: getSourceLocation(
-                        completeSource,
-                        absoluteMatchIndex,
-                    ),
+                    location:
+                        getSourceLocation(
+                            completeSource,
+                            absoluteMatchIndex,
+                        ),
                 });
             }
 
             return createConceptToken({
                 id,
                 alias:
-                    alias && alias.length > 0
+                    alias &&
+                    alias.length > 0
                         ? alias
                         : undefined,
             });
