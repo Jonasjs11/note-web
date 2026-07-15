@@ -22,6 +22,20 @@ export default function Note() {
         );
     }
 
+    if (note.error) {
+        return (
+            <>
+                <h1>Invalid note</h1>
+
+                <p>
+                    The note could not be loaded correctly.
+                </p>
+
+                <pre>{note.error}</pre>
+            </>
+        );
+    }
+
     return (
         <>
             <h1>{note.title}</h1>

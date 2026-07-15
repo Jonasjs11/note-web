@@ -1,4 +1,5 @@
 import type { Note } from "../models/Note";
+import { parseNoteTitle } from "../parser/parseNoteTitle";
 
 const noteFiles = import.meta.glob(
     "../notes/**/*.mdx",
@@ -25,6 +26,8 @@ function createNote(
 
     const segments = relativePath.split("/");
 
+    const parsedTitle = parseNoteTitle(source, filePath);
+
     if (segments.length < 2) {
         throw new Error(
             `Invalid note path: "${filePath}". ` +
@@ -45,7 +48,7 @@ function createNote(
 
     return {
         id,
-        title: formatTitle(id),
+        title: parsedTitle.title ?? formatFallbackTitle(id),
 
         subject,
         folders,
@@ -53,10 +56,12 @@ function createNote(
         url: `/${segments.join("/")}`,
         filePath,
         source,
+
+        error: parsedTitle.error ?? undefined,
     };
 }
 
-function formatTitle(value: string): string {
+function formatFallbackTitle(value: string): string {
     return value
         .split(/[-_]/)
         .filter(Boolean)

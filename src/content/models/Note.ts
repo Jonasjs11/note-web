@@ -8,4 +8,6 @@ export interface Note {
     url: string;
     filePath: string;
     source: string;
+
+    error?: string;
 }
