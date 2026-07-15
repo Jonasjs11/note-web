@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
-import { navigation } from "../../app/navigation";
+import { navigation } from "../../content";
 import type { NavigationItem } from "../../types/Navigation";
 
 import "./Sidebar.css";
