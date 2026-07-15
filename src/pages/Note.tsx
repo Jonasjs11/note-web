@@ -26,11 +26,6 @@ export default function Note() {
         );
     }
 
-    console.log(
-        "Reference targets:",
-        note.references,
-    );
-
     const errors = note.diagnostics.filter(
         diagnostic => diagnostic.severity === "error",
     );

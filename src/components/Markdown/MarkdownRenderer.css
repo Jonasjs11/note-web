@@ -134,3 +134,28 @@
     color: #ff8a80;
     font-family: Consolas, "Courier New", monospace;
 }
+
+.reference-link {
+    color: #8ab4f8;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.reference-link:hover {
+    color: white;
+}
+
+.reference-anchor {
+    display: block;
+    position: relative;
+    top: -1rem;
+
+    width: 0;
+    height: 0;
+
+    scroll-margin-top: 2rem;
+}
+
+html {
+    scroll-behavior: smooth;
+}

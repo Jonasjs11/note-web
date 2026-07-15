@@ -53,3 +53,29 @@ export function createConceptToken(
         arguments_,
     );
 }
+
+export interface ReferenceCommandData {
+    anchorId: string;
+    text: string;
+}
+
+export function createReferenceToken(
+    data: ReferenceCommandData,
+): string {
+    return encodeCommandToken(
+        "reference",
+        [
+            data.anchorId,
+            data.text,
+        ],
+    );
+}
+
+export function createReferenceAnchorToken(
+    anchorId: string,
+): string {
+    return encodeCommandToken(
+        "reference-anchor",
+        [anchorId],
+    );
+}

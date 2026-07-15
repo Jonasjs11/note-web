@@ -32,8 +32,8 @@ function createNote(
     const titleResult = parseNoteTitle(source, filePath);
 
     const referenceAnalysis = analyzeEquationReferences(source, filePath);
-    
-    const transformationResult = transformSource(source, filePath);
+
+    const transformationResult = transformSource(source, filePath, referenceAnalysis.targets);
 
     if (segments.length < 2) {
         throw new Error(
