@@ -3,7 +3,7 @@ import type {
     DiagnosticResult,
 } from "../models/Diagnostic";
 
-import { createConceptPlaceholder } from "../commands/CommandPlaceholder";
+import { createConceptToken, encodeCommandToken  } from "../commands/CommandToken";
 import { getSourceLocation } from "../parser/getSourceLocation";
 
 export function transformConceptCommands(
@@ -57,7 +57,7 @@ export function transformConceptCommands(
                 });
             }
 
-            return createConceptPlaceholder({
+            return createConceptToken({
                 id,
                 alias:
                     alias && alias.length > 0

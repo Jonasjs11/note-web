@@ -4,7 +4,7 @@ import { notes } from "../content/loader/loadNotes";
 
 import type { Diagnostic } from "../content/models/Diagnostic";
 
-import MarkdownRenderer from "../components/Markdown/MarkdownRenderer";
+import DocumentRenderer from "../components/Document/DocumentRenderer";
 
 export default function Note() {
     const location = useLocation();
@@ -68,7 +68,7 @@ export default function Note() {
                 />
             )}
 
-            <MarkdownRenderer
+            <DocumentRenderer
                 key={note.url}
                 source={note.transformedSource}
             />

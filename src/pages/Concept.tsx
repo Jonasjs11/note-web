@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 
-import MarkdownRenderer from "../components/Markdown/MarkdownRenderer";
+import DocumentRenderer from "../components/Document/DocumentRenderer";
 
 import { findConcept } from "../content";
 import { buildConceptPageSource } from "../content/builders/buildConceptPageSource";
@@ -35,7 +35,7 @@ export default function Concept() {
     );
 
     return (
-        <MarkdownRenderer
+        <DocumentRenderer
             key={concept.id}
             source={transformed.value}
         />
