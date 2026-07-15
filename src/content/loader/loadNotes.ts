@@ -26,7 +26,7 @@ function createNote(
 
     const segments = relativePath.split("/");
 
-    const parsedTitle = parseNoteTitle(source, filePath);
+    const titleResult = parseNoteTitle(source, filePath);
 
     if (segments.length < 2) {
         throw new Error(
@@ -48,7 +48,9 @@ function createNote(
 
     return {
         id,
-        title: parsedTitle.title ?? formatFallbackTitle(id),
+        title:
+            titleResult.value.title ??
+            `⚠ ${formatFallbackTitle(id)}`,
 
         subject,
         folders,
@@ -57,16 +59,21 @@ function createNote(
         filePath,
         source,
 
-        error: parsedTitle.error ?? undefined,
+        diagnostics: titleResult.diagnostics,
     };
 }
 
-function formatFallbackTitle(value: string): string {
+function formatFallbackTitle(
+    value: string,
+): string {
     return value
         .split(/[-_]/)
         .filter(Boolean)
         .map((word) => {
-            return word.charAt(0).toUpperCase() + word.slice(1);
+            return (
+                word.charAt(0).toUpperCase() +
+                word.slice(1)
+            );
         })
         .join(" ");
 }

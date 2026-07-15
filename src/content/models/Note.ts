@@ -1,3 +1,5 @@
+import type { Diagnostic } from "./Diagnostic";
+
 export interface Note {
     id: string;
     title: string;
@@ -9,5 +11,5 @@ export interface Note {
     filePath: string;
     source: string;
 
-    error?: string;
+    diagnostics: Diagnostic[];
 }
