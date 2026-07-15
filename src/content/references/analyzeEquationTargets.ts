@@ -6,7 +6,10 @@ import type { ReferenceAnalysis } from "./ReferenceAnalysis";
 import type { ReferenceTarget } from "./ReferenceTarget";
 
 import { createReferenceAnchor } from "./createReferenceAnchor";
-import { splitAlignRows } from "./splitAlignRows";
+import {
+    splitAlignRows,
+    type AlignRowInfo,
+} from "./splitAlignRows";
 
 export function analyzeEquationTargets(
     source: string,
@@ -19,8 +22,8 @@ export function analyzeEquationTargets(
         new Map<string, ReferenceTarget>();
 
     /*
-     * Matching both environment types with one pattern
-     * preserves their order in the original document.
+     * A single expression preserves the order of
+     * equation and align environments.
      */
     const environmentPattern =
         /\\begin\{(equation|align)\}([\s\S]*?)\\end\{\1\}/g;
@@ -41,36 +44,48 @@ export function analyzeEquationTargets(
             environmentMatch[0];
 
         const environmentStart =
-            environmentMatch.index;
+            environmentMatch.index ?? 0;
+
+        const contentOffset =
+            completeEnvironment.indexOf(
+                environmentContent,
+            );
+
+        const contentStart =
+            environmentStart + contentOffset;
 
         if (environmentType === "align") {
             const rows = splitAlignRows(
                 environmentContent,
             );
 
-            console.log(
-                "Align rows:",
-                rows,
-            );
+            for (const row of rows) {
+                equationNumber++;
 
-            equationNumber += rows.length;
+                analyzeAlignRow(
+                    source,
+                    filePath,
+                    row,
+                    contentStart,
+                    equationNumber,
+                    targetsByLabel,
+                    targets,
+                    diagnostics,
+                );
+            }
 
-            /*
-            * Labels inside align rows are processed
-            * in the next feature.
-            */
             continue;
         }
 
         equationNumber++;
 
-        analyzeEquationEnvironment(
+        analyzeNumberedObjectLabels(
             source,
             filePath,
-            completeEnvironment,
             environmentContent,
-            environmentStart,
+            contentStart,
             equationNumber,
+            "equation",
             targetsByLabel,
             targets,
             diagnostics,
@@ -83,13 +98,45 @@ export function analyzeEquationTargets(
     };
 }
 
-function analyzeEquationEnvironment(
+function analyzeAlignRow(
     source: string,
     filePath: string,
-    completeEnvironment: string,
-    environmentContent: string,
-    environmentStart: number,
+    row: AlignRowInfo,
+    environmentContentStart: number,
     equationNumber: number,
+    targetsByLabel: Map<
+        string,
+        ReferenceTarget
+    >,
+    targets: ReferenceTarget[],
+    diagnostics: Diagnostic[],
+): void {
+    const rowStart =
+        environmentContentStart +
+        row.startOffset;
+
+    analyzeNumberedObjectLabels(
+        source,
+        filePath,
+        row.source,
+        rowStart,
+        equationNumber,
+        "align row",
+        targetsByLabel,
+        targets,
+        diagnostics,
+    );
+}
+
+function analyzeNumberedObjectLabels(
+    source: string,
+    filePath: string,
+    objectSource: string,
+    objectStart: number,
+    equationNumber: number,
+    objectDescription:
+        | "equation"
+        | "align row",
     targetsByLabel: Map<
         string,
         ReferenceTarget
@@ -101,7 +148,7 @@ function analyzeEquationEnvironment(
         /\\label\{([^{}]*)\}/g;
 
     const labelMatches = [
-        ...environmentContent.matchAll(
+        ...objectSource.matchAll(
             labelPattern,
         ),
     ];
@@ -110,31 +157,21 @@ function analyzeEquationEnvironment(
         return;
     }
 
-    const contentOffset =
-        completeEnvironment.indexOf(
-            environmentContent,
-        );
-
-    const contentStart =
-        environmentStart + contentOffset;
-
     if (labelMatches.length > 1) {
         for (
             const extraLabel of
                 labelMatches.slice(1)
         ) {
-            const absoluteIndex =
-                contentStart +
-                (extraLabel.index ?? 0);
-
             diagnostics.push({
                 severity: "error",
                 message:
-                    "An equation may only have one label.",
+                    `An ${objectDescription} ` +
+                    "may only have one label.",
                 filePath,
                 location: getSourceLocation(
                     source,
-                    absoluteIndex,
+                    objectStart +
+                        (extraLabel.index ?? 0),
                 ),
             });
         }
@@ -147,14 +184,15 @@ function analyzeEquationEnvironment(
         firstLabelMatch[1].trim();
 
     const labelIndex =
-        contentStart +
+        objectStart +
         (firstLabelMatch.index ?? 0);
 
     if (!label) {
         diagnostics.push({
             severity: "error",
             message:
-                "An equation label cannot be empty.",
+                `An ${objectDescription} ` +
+                "label cannot be empty.",
             filePath,
             location: getSourceLocation(
                 source,
