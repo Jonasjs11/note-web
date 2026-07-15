@@ -3,7 +3,10 @@ import type { Diagnostic } from "../models/Diagnostic";
 import { getSourceLocation } from "../parser/getSourceLocation";
 
 import { createReferenceAnchor } from "./createReferenceAnchor";
-import type { ReferenceTarget } from "./ReferenceTarget";
+import type {
+    ReferenceNumber,
+    ReferenceTarget,
+} from "./ReferenceTarget";
 
 export type NumberedObjectDescription =
     | "equation"
@@ -15,7 +18,7 @@ interface AnalyzeNumberedObjectLabelsOptions {
 
     objectSource: string;
     objectStart: number;
-    equationNumber: number;
+    number: ReferenceNumber;
 
     objectDescription:
         NumberedObjectDescription;
@@ -34,7 +37,7 @@ export function analyzeNumberedObjectLabels({
     filePath,
     objectSource,
     objectStart,
-    equationNumber,
+    number,
     objectDescription,
     targetsByLabel,
     targets,
@@ -131,15 +134,7 @@ export function analyzeNumberedObjectLabels({
     const target: ReferenceTarget = {
         label,
         type: "equation",
-
-        number: {
-            primary: equationNumber,
-        },
-
-        /*
-         * MathJax creates this ID from
-         * the LaTeX label.
-         */
+        number,
         anchorId: `mjx-eqn:${label}`,
     };
 

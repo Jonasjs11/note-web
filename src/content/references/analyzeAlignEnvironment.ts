@@ -4,8 +4,17 @@ import {
     analyzeNumberedObjectLabels,
 } from "./analyzeNumberedObjectLabels";
 
-import type { ReferenceTarget } from "./ReferenceTarget";
-import { splitAlignRows } from "./splitAlignRows";
+import type {
+    EquationNumbering,
+} from "./EquationNumbering";
+
+import type {
+    ReferenceTarget,
+} from "./ReferenceTarget";
+
+import {
+    splitAlignRows,
+} from "./splitAlignRows";
 
 interface AnalyzeAlignEnvironmentOptions {
     completeSource: string;
@@ -14,7 +23,7 @@ interface AnalyzeAlignEnvironmentOptions {
     environmentContent: string;
     environmentContentStart: number;
 
-    previousEquationNumber: number;
+    numbering: EquationNumbering;
 
     targetsByLabel: Map<
         string,
@@ -29,28 +38,25 @@ interface AnalyzeAlignEnvironmentOptions {
  * Analyzes every numbered row in one align
  * environment.
  *
- * Returns the final equation number after all
- * rows have been processed.
+ * The numbering object determines whether rows
+ * receive ordinary or subequation numbers.
  */
 export function analyzeAlignEnvironment({
     completeSource,
     filePath,
     environmentContent,
     environmentContentStart,
-    previousEquationNumber,
+    numbering,
     targetsByLabel,
     targets,
     diagnostics,
-}: AnalyzeAlignEnvironmentOptions): number {
+}: AnalyzeAlignEnvironmentOptions): void {
     const rows = splitAlignRows(
         environmentContent,
     );
 
-    let equationNumber =
-        previousEquationNumber;
-
     for (const row of rows) {
-        equationNumber++;
+        const number = numbering.next();
 
         analyzeNumberedObjectLabels({
             completeSource,
@@ -62,7 +68,7 @@ export function analyzeAlignEnvironment({
                 environmentContentStart +
                 row.startOffset,
 
-            equationNumber,
+            number,
             objectDescription: "align row",
 
             targetsByLabel,
@@ -70,6 +76,4 @@ export function analyzeAlignEnvironment({
             diagnostics,
         });
     }
-
-    return equationNumber;
 }

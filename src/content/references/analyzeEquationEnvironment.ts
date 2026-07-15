@@ -4,7 +4,10 @@ import {
     analyzeNumberedObjectLabels,
 } from "./analyzeNumberedObjectLabels";
 
-import type { ReferenceTarget } from "./ReferenceTarget";
+import type {
+    ReferenceNumber,
+    ReferenceTarget,
+} from "./ReferenceTarget";
 
 interface AnalyzeEquationEnvironmentOptions {
     completeSource: string;
@@ -13,7 +16,7 @@ interface AnalyzeEquationEnvironmentOptions {
     environmentContent: string;
     environmentContentStart: number;
 
-    equationNumber: number;
+    number: ReferenceNumber;
 
     targetsByLabel: Map<
         string,
@@ -29,7 +32,7 @@ export function analyzeEquationEnvironment({
     filePath,
     environmentContent,
     environmentContentStart,
-    equationNumber,
+    number,
     targetsByLabel,
     targets,
     diagnostics,
@@ -44,7 +47,7 @@ export function analyzeEquationEnvironment({
         objectStart:
             environmentContentStart,
 
-        equationNumber,
+        number,
         objectDescription: "equation",
 
         targetsByLabel,

@@ -8,8 +8,17 @@ import {
     analyzeEquationEnvironment,
 } from "./analyzeEquationEnvironment";
 
-import type { ReferenceAnalysis } from "./ReferenceAnalysis";
-import type { ReferenceTarget } from "./ReferenceTarget";
+import {
+    EquationNumbering,
+} from "./EquationNumbering";
+
+import type {
+    ReferenceAnalysis,
+} from "./ReferenceAnalysis";
+
+import type {
+    ReferenceTarget,
+} from "./ReferenceTarget";
 
 export function analyzeEquationTargets(
     source: string,
@@ -21,10 +30,15 @@ export function analyzeEquationTargets(
     const targetsByLabel =
         new Map<string, ReferenceTarget>();
 
+    const numbering =
+        new EquationNumbering();
+
+    /*
+     * One expression preserves the shared document
+     * order of equation and align environments.
+     */
     const environmentPattern =
         /\\begin\{(equation|align)\}([\s\S]*?)\\end\{\1\}/g;
-
-    let equationNumber = 0;
 
     for (
         const environmentMatch of
@@ -52,26 +66,24 @@ export function analyzeEquationTargets(
             contentOffset;
 
         if (environmentType === "align") {
-            equationNumber =
-                analyzeAlignEnvironment({
-                    completeSource: source,
-                    filePath,
+            analyzeAlignEnvironment({
+                completeSource: source,
+                filePath,
 
-                    environmentContent,
-                    environmentContentStart,
+                environmentContent,
+                environmentContentStart,
 
-                    previousEquationNumber:
-                        equationNumber,
+                numbering,
 
-                    targetsByLabel,
-                    targets,
-                    diagnostics,
-                });
+                targetsByLabel,
+                targets,
+                diagnostics,
+            });
 
             continue;
         }
 
-        equationNumber++;
+        const number = numbering.next();
 
         analyzeEquationEnvironment({
             completeSource: source,
@@ -80,7 +92,7 @@ export function analyzeEquationTargets(
             environmentContent,
             environmentContentStart,
 
-            equationNumber,
+            number,
 
             targetsByLabel,
             targets,
