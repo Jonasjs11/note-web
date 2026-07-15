@@ -1,5 +1,7 @@
 import type { Diagnostic } from "./Diagnostic";
 
+import type { ReferenceTarget } from "../references/ReferenceTarget";
+
 export interface Note {
     id: string;
     title: string;
@@ -13,5 +15,6 @@ export interface Note {
     source: string;
     transformedSource: string;
 
+    references: ReferenceTarget[];
     diagnostics: Diagnostic[];
 }

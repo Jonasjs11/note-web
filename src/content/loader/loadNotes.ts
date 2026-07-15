@@ -2,6 +2,8 @@ import type { Note } from "../models/Note";
 import { parseNoteTitle } from "../parser/parseNoteTitle";
 import { transformSource } from "../transformers/transformSource";
 
+import { analyzeEquationReferences } from "../references/analyzeEquationReferences";
+
 const noteFiles = import.meta.glob(
     "../notes/**/*.mdx",
     {
@@ -24,11 +26,13 @@ function createNote(
     const relativePath = filePath
         .replace("../notes/", "")
         .replace(/\.mdx$/, "");
-
+        
     const segments = relativePath.split("/");
 
     const titleResult = parseNoteTitle(source, filePath);
 
+    const referenceAnalysis = analyzeEquationReferences(source, filePath);
+    
     const transformationResult = transformSource(source, filePath);
 
     if (segments.length < 2) {
@@ -64,8 +68,10 @@ function createNote(
         source,
         transformedSource: transformationResult.value,
 
+        references: referenceAnalysis.targets,
         diagnostics: [
             ...titleResult.diagnostics,
+            ...referenceAnalysis.diagnostics,
             ...transformationResult.diagnostics,
         ],
     };
