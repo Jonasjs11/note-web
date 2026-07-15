@@ -4,7 +4,6 @@ import type {
 } from "../models/Diagnostic";
 
 import {
-    createReferenceAnchorToken,
     createReferenceToken,
 } from "../commands/CommandToken";
 
@@ -27,24 +26,20 @@ export function transformReferenceCommands(
 
     const registry = context.referenceRegistry;
 
-    let transformedSource = transformMarkdownText(
-        source,
-        (text, sourceOffset) => {
-            return transformReferencesInText(
-                text,
-                source,
-                filePath,
-                sourceOffset,
-                registry,
-                diagnostics,
-            );
-        },
-    );
-
-    transformedSource = addEquationAnchors(
-        transformedSource,
-        registry,
-    );
+    const transformedSource =
+        transformMarkdownText(
+            source,
+            (text, sourceOffset) => {
+                return transformReferencesInText(
+                    text,
+                    source,
+                    filePath,
+                    sourceOffset,
+                    registry,
+                    diagnostics,
+                );
+            },
+        );
 
     return {
         value: transformedSource,
@@ -165,45 +160,6 @@ function transformReferencesInText(
                     }),
                 ),
             });
-        },
-    );
-}
-
-function addEquationAnchors(
-    source: string,
-    registry: ReferenceRegistry,
-): string {
-    const equationPattern =
-        /\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g;
-
-    return source.replace(
-        equationPattern,
-        (environment: string) => {
-            const labelMatch =
-                environment.match(
-                    /\\label\{([^{}]*)\}/,
-                );
-
-            if (!labelMatch) {
-                return environment;
-            }
-
-            const label = labelMatch[1].trim();
-
-            const target = registry.find(label);
-
-            if (!target) {
-                return environment;
-            }
-
-            return (
-                "\n\n" +
-                createReferenceAnchorToken(
-                    target.anchorId,
-                ) +
-                "\n\n" +
-                environment
-            );
         },
     );
 }

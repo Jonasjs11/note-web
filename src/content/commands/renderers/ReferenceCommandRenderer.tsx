@@ -1,4 +1,7 @@
-import type { ReactNode } from "react";
+import type {
+    MouseEvent,
+    ReactNode,
+} from "react";
 
 import type { ReferenceType } from "../../references/ReferenceTarget";
 
@@ -112,13 +115,10 @@ function renderSameTypeReferences(
         const target = targets[0];
 
         return (
-            <a
-                href={`#${target.anchorId}`}
-                className="reference-link"
-            >
+            <ReferenceLink target={target}>
                 {displayedTypeName}{" "}
                 {target.number}
-            </a>
+            </ReferenceLink>
         );
     }
 
@@ -196,17 +196,115 @@ function renderLinkedNumbers(
 
 function ReferenceLink({
     target,
+    children,
 }: {
     target: RenderTarget;
+    children?: ReactNode;
 }) {
+    function handleClick(
+        event: MouseEvent<HTMLAnchorElement>,
+    ): void {
+        event.preventDefault();
+
+        scrollToReferenceTarget(
+            target.anchorId,
+        );
+    }
+
     return (
         <a
             href={`#${target.anchorId}`}
             className="reference-link"
+            onClick={handleClick}
         >
-            {target.number}
+            {children ?? target.number}
         </a>
     );
+}
+
+function scrollToReferenceTarget(
+    anchorId: string,
+): void {
+    const target =
+        document.getElementById(anchorId);
+
+    if (!target) {
+        console.warn(
+            `Reference target "${anchorId}" was not found.`,
+        );
+
+        return;
+    }
+
+    const scrollContainer =
+        findScrollableAncestor(target);
+
+    const topOffset = 18; // CHANGE THIS
+
+    if (scrollContainer) {
+        const containerRect =
+            scrollContainer.getBoundingClientRect();
+
+        const targetRect =
+            target.getBoundingClientRect();
+
+        const targetTop =
+            scrollContainer.scrollTop +
+            targetRect.top -
+            containerRect.top -
+            topOffset;
+
+        scrollContainer.scrollTo({
+            top: targetTop,
+            behavior: "smooth",
+        });
+    } else {
+        const targetTop =
+            window.scrollY +
+            target.getBoundingClientRect().top -
+            topOffset;
+
+        window.scrollTo({
+            top: targetTop,
+            behavior: "smooth",
+        });
+    }
+
+    window.history.pushState(
+        null,
+        "",
+        `#${anchorId}`,
+    );
+}
+
+function findScrollableAncestor(
+    element: Element,
+): HTMLElement | undefined {
+    let parent = element.parentElement;
+
+    while (parent) {
+        const style =
+            window.getComputedStyle(parent);
+
+        const overflowY =
+            style.overflowY;
+
+        const canScroll =
+            (
+                overflowY === "auto" ||
+                overflowY === "scroll"
+            ) &&
+            parent.scrollHeight >
+                parent.clientHeight;
+
+        if (canScroll) {
+            return parent;
+        }
+
+        parent = parent.parentElement;
+    }
+
+    return undefined;
 }
 
 function getSeparator(

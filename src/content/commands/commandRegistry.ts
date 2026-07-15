@@ -2,7 +2,6 @@ import type { CommandRenderer } from "./CommandRenderer";
 
 import ConceptCommandRenderer from "./renderers/ConceptCommandRenderer";
 
-import ReferenceAnchorRenderer from "./renderers/ReferenceAnchorRenderer";
 import ReferenceCommandRenderer from "./renderers/ReferenceCommandRenderer";
 
 export const commandRegistry =
@@ -14,9 +13,5 @@ export const commandRegistry =
         [
             "reference",
             ReferenceCommandRenderer,
-        ],
-        [
-            "reference-anchor",
-            ReferenceAnchorRenderer,
         ],
     ]);

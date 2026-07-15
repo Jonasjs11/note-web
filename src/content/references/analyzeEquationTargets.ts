@@ -5,7 +5,6 @@ import { getSourceLocation } from "../parser/getSourceLocation";
 import type { ReferenceAnalysis } from "./ReferenceAnalysis";
 import type { ReferenceTarget } from "./ReferenceTarget";
 
-import { createReferenceAnchor } from "./createReferenceAnchor";
 import {
     splitAlignRows,
     type AlignRowInfo,
@@ -240,8 +239,7 @@ function analyzeNumberedObjectLabels(
             primary: equationNumber,
         },
 
-        anchorId:
-            createReferenceAnchor(label),
+        anchorId: `mjx-eqn:${label}`,
     };
 
     targetsByLabel.set(label, target);

@@ -84,12 +84,3 @@ export function createReferenceToken(
         arguments_,
     );
 }
-
-export function createReferenceAnchorToken(
-    anchorId: string,
-): string {
-    return encodeCommandToken(
-        "reference-anchor",
-        [anchorId],
-    );
-}
