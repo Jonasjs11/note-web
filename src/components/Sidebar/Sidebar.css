@@ -15,12 +15,14 @@
     padding-bottom: 0.35rem;
 
     border: none;
+    border-radius: 0;
 
     color: inherit;
     background: transparent;
 
     font: inherit;
     text-align: left;
+    text-decoration: none;
 
     cursor: pointer;
 }
@@ -29,8 +31,32 @@
     background: rgba(255, 255, 255, 0.08);
 }
 
+.navigation-folder {
+    font-weight: 600;
+}
+
+.navigation-page {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.navigation-page:hover {
+    color: white;
+}
+
+.navigation-page-active {
+    color: white;
+    background: rgba(255, 255, 255, 0.14);
+    font-weight: 600;
+}
+
+.navigation-page-active:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
 .navigation-arrow {
     display: inline-block;
+    flex-shrink: 0;
+
     width: 1rem;
 
     font-size: 0.7rem;

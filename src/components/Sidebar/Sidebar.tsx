@@ -1,45 +1,67 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 
 import { navigation } from "../../app/navigation";
 import type { NavigationItem } from "../../types/Navigation";
 
 import "./Sidebar.css";
 
+interface NavigationNodeProps {
+    item: NavigationItem;
+    depth: number;
+}
+
 function NavigationNode({
     item,
     depth,
-}: {
-    item: NavigationItem;
-    depth: number;
-}) {
+}: NavigationNodeProps) {
     const isFolder = Boolean(item.children?.length);
 
     const [isExpanded, setIsExpanded] = useState(true); // true means start expanded
 
-    function handleClick() {
-        if (isFolder) {
-            setIsExpanded((currentlyExpanded) => !currentlyExpanded); //Reverse the expanded state on click
-        }
+    const indentationStyle = {
+        paddingLeft: `${16 + depth * 20}px`,
+    };
+
+    if (!isFolder && item.path) {
+        return (
+            <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                    `navigation-node navigation-page ${
+                        isActive ? "navigation-page-active" : ""
+                    }`
+                }
+                style={indentationStyle}
+            >
+                <span className="navigation-arrow" />
+
+                <span>{item.title}</span>
+            </NavLink>
+        );
     }
 
     return (
         <div>
             <button
-                className="navigation-node"
-                style={{
-                    paddingLeft: `${16 + depth * 20}px`,
+                className="navigation-node navigation-folder"
+                style={indentationStyle}
+                onClick={() => {
+                    setIsExpanded((currentlyExpanded) => {
+                        return !currentlyExpanded;
+                    });
                 }}
-                onClick={handleClick}
                 type="button"
+                aria-expanded={isExpanded}
             >
                 <span className="navigation-arrow">
-                    {isFolder ? (isExpanded ? "▼" : "▶") : ""}
+                    {isExpanded ? "▼" : "▶"}
                 </span>
 
                 <span>{item.title}</span>
             </button>
 
-            {isFolder && isExpanded && (
+            {isExpanded && (
                 <div>
                     {item.children?.map((child) => (
                         <NavigationNode

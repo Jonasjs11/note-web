@@ -1,9 +1,8 @@
-import {
-    createBrowserRouter,
-} from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 
 import Layout from "./Layout";
 import Home from "../pages/Home";
+import Note from "../pages/Note";
 
 export const router = createBrowserRouter([
     {
@@ -13,6 +12,10 @@ export const router = createBrowserRouter([
             {
                 index: true,
                 element: <Home />,
+            },
+            {
+                path: ":subject/:section/:noteId",
+                element: <Note />,
             },
         ],
     },
