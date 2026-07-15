@@ -2,7 +2,7 @@ import type { Note } from "../models/Note";
 import { parseNoteTitle } from "../parser/parseNoteTitle";
 import { transformSource } from "../transformers/transformSource";
 
-import { analyzeEquationReferences } from "../references/analyzeEquationReferences";
+import { analyzeEquationTargets } from "../references/analyzeEquationTargets";
 
 const noteFiles = import.meta.glob(
     "../notes/**/*.mdx",
@@ -31,7 +31,7 @@ function createNote(
 
     const titleResult = parseNoteTitle(source, filePath);
 
-    const referenceAnalysis = analyzeEquationReferences(source, filePath);
+    const referenceAnalysis = analyzeEquationTargets(source, filePath);
 
     const transformationResult = transformSource(source, filePath, referenceAnalysis.targets);
 
