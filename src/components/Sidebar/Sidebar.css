@@ -1,0 +1,10 @@
+.sidebar {
+    padding: 1rem 0;
+}
+
+.navigation-node {
+    padding: 0.4rem 1rem;
+    padding-left: calc(
+        1rem + var(--navigation-depth) * 1.25rem
+    );
+}

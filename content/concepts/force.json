@@ -1,0 +1,16 @@
+{
+    "id": "force",
+
+    "title": "Force",
+
+    "symbol": "F",
+
+    "unit": "N",
+
+    "definition": "A push or pull that changes the motion of an object.",
+
+    "links": [
+        "newtons-second-law",
+        "vectors"
+    ]
+}
