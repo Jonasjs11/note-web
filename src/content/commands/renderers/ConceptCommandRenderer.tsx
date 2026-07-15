@@ -1,28 +1,27 @@
-import { Link } from "react-router-dom";
+import ConceptReference from "../../../components/Concept/ConceptReference";
 
 import type { CommandRenderer } from "../CommandRenderer";
 
 const ConceptCommandRenderer: CommandRenderer = {
+    render(arguments_) {
+        const id = arguments_[0];
+        const alias = arguments_[1];
 
-    render(args) {
-
-        const id = args[0];
-
-        const alias = args[1];
+        if (!id) {
+            return (
+                <span className="command-error">
+                    Missing concept ID
+                </span>
+            );
+        }
 
         return (
-
-            <Link
-                to={`/concepts/${id}`}
-                className="concept-link"
-            >
-                {alias ?? id}
-            </Link>
-
+            <ConceptReference
+                id={id}
+                alias={alias}
+            />
         );
-
     },
-
 };
 
 export default ConceptCommandRenderer;
