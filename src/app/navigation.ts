@@ -1,37 +1,4 @@
-import type { NavigationItem } from "../types/Navigation";
+import { notes } from "../content/loader/loadNotes";
+import { buildNavigation } from "../content/builders/navigation";
 
-export const navigation: NavigationItem[] = [
-    {
-        title: "Physics",
-        children: [
-            {
-                title: "Mechanics",
-                children: [
-                    {
-                        title: "Vectors",
-                        path: "/physics/mechanics/vectors",
-                    },
-                    {
-                        title: "Forces",
-                        path: "/physics/mechanics/forces",
-                    },
-                ],
-            },
-        ],
-    },
-
-    {
-        title: "Mathematics",
-        children: [
-            {
-                title: "Calculus",
-                children: [
-                    {
-                        title: "Derivatives",
-                        path: "/math/calculus/derivatives",
-                    },
-                ],
-            },
-        ],
-    },
-];
+export const navigation = buildNavigation(notes);
