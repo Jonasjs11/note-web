@@ -4,7 +4,7 @@ import { notes } from "../content/loader/loadNotes";
 
 import type { Diagnostic } from "../content/models/Diagnostic";
 
-import MarkdownRenderer from "../components/Markdown/MarkdownRenderer";
+import MarkdownRenderer from "../components/Markdown/MarkdownView";
 
 export default function Note() {
     const location = useLocation();

@@ -22,6 +22,10 @@ import {
     transformMarkdownText,
 } from "./transformMarkdownText";
 
+import {
+    findLatexCommands,
+} from "../parser/findLatexCommands";
+
 export function transformFigureEnvironments(
     source: string,
     _filePath: string,
@@ -109,6 +113,10 @@ function transformFiguresInText(
                       )
                     : `figure-${numberedFigure.number}`;
 
+            const transformedCaption =
+                extractCaption(figureContent) ??
+                numberedFigure.caption;
+
             return (
                 "\n\n" +
                 createFigureToken({
@@ -116,7 +124,7 @@ function transformFiguresInText(
                     imagePath:
                         imagePath ?? "",
                     caption:
-                        numberedFigure.caption,
+                        transformedCaption,
                     number:
                         numberedFigure.number.toString(),
                     anchorId,
@@ -143,4 +151,19 @@ function extractImagePath(
         match?.[1].trim();
 
     return path || undefined;
+}
+
+function extractCaption(
+    figureContent: string,
+): string | undefined {
+    const captionMatch =
+        findLatexCommands(
+            figureContent,
+            "caption",
+        )[0];
+
+    const caption =
+        captionMatch?.value.trim();
+
+    return caption || undefined;
 }

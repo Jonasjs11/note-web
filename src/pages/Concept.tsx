@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 
-import MarkdownRenderer from "../components/Markdown/MarkdownRenderer";
+import MarkdownRenderer from "../components/Markdown/MarkdownView";
 
 import { findConcept } from "../content";
 import { buildConceptPageSource } from "../content/builders/buildConceptPageSource";

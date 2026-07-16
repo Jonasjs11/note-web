@@ -2,6 +2,9 @@ import type {
     CommandRenderer,
 } from "../CommandRenderer";
 
+import InlineMarkdownRenderer
+    from "../../../components/Markdown/InlineMarkdownRenderer";
+
 const FigureCommandRenderer:
     CommandRenderer = {
         render(arguments_) {
@@ -64,17 +67,11 @@ const FigureCommandRenderer:
                         </div>
                     )}
 
-                    <figcaption className="note-figure__caption">
-                        <span className="note-figure__number">
-                            Figure {number}.
-                        </span>
-
-                        {caption && (
-                            <>
-                                {" "}
-                                {caption}
-                            </>
-                        )}
+                    <figcaption>
+                        Figure {number}.{" "}
+                        <InlineMarkdownRenderer
+                            source={caption}
+                        />
                     </figcaption>
                 </figure>
             );

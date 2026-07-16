@@ -5,7 +5,7 @@ import {
 
 import { Link } from "react-router-dom";
 
-import MarkdownRenderer from "../Markdown/MarkdownRenderer";
+import MarkdownRenderer from "../Markdown/MarkdownView";
 
 import { buildConceptPageSource } from "../../content/builders/buildConceptPageSource";
 import type { Concept } from "../../content/models/Concept";
