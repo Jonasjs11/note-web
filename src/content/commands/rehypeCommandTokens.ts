@@ -97,6 +97,7 @@ function convertTextNode(
 }
 const blockCommands = new Set([
     "figure",
+    "table",
 ]);
 
 function unwrapBlockCommandParagraphs(

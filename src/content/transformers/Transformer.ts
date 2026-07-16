@@ -9,11 +9,16 @@ import type {
     NumberedFigure,
 } from "../references/NumberedFigure";
 
+import type {
+    NumberedTable,
+} from "../references/NumberedTable";
+
 export interface SourceTransformContext {
     referenceRegistry: ReferenceRegistry;
 
     numberedEquations: NumberedEquation[];
     numberedFigures: NumberedFigure[];
+    numberedTables: NumberedTable[];
 }
 
 export type SourceTransformer = (

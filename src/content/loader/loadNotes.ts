@@ -8,6 +8,9 @@ import {
     analyzeFigureTargets,
 } from "../references/analyzeFigureTargets";
 
+import { analyzeTableTargets } from "../references/analyzeTableTargets";
+
+
 const noteFiles = import.meta.glob(
     "../notes/**/*.mdx",
     {
@@ -35,25 +38,37 @@ function createNote(
 
     const titleResult = parseNoteTitle(source, filePath);
 
-    const referenceAnalysis = analyzeEquationTargets(source, filePath);
+    const equationAnalysis = analyzeEquationTargets(source, filePath);
 
     const figureAnalysis = analyzeFigureTargets(
         source,
         filePath,
-        referenceAnalysis.targets,
+        equationAnalysis.targets,
     );
 
+    const tableAnalysis = analyzeTableTargets(
+        source,
+        filePath,
+        [
+            ...equationAnalysis.targets,
+            ...figureAnalysis.targets,
+        ],
+    );
+
+
     const referenceTargets = [
-        ...referenceAnalysis.targets,
+        ...equationAnalysis.targets,
         ...figureAnalysis.targets,
+        ...tableAnalysis.targets,
     ];
 
     const transformationResult = transformSource(
         source,
         filePath,
         referenceTargets,
-        referenceAnalysis.numberedEquations,
+        equationAnalysis.numberedEquations,
         figureAnalysis.numberedFigures,
+        tableAnalysis.numberedTables,
     );
 
     if (segments.length < 2) {
@@ -94,8 +109,9 @@ function createNote(
         numberedFigures: figureAnalysis.numberedFigures,
         diagnostics: [
             ...titleResult.diagnostics,
-            ...referenceAnalysis.diagnostics,
+            ...equationAnalysis.diagnostics,
             ...figureAnalysis.diagnostics,
+            ...tableAnalysis.diagnostics,
             ...transformationResult.diagnostics,
         ],
     };

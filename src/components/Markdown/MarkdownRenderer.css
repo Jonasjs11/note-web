@@ -677,3 +677,129 @@ html {
         margin-bottom: 1.25rem;
     }
 }
+/* =========================================================
+   Numbered table container
+   ========================================================= */
+
+.note-table {
+    /*
+     * Gives the complete table, caption and source a predictable
+     * width and centers the whole element in the note view.
+     */
+    width: min(100%, 52rem);
+    margin: 2rem auto;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+
+/* =========================================================
+   Scrollable table body
+   ========================================================= */
+
+.note-table__scroll {
+    /*
+     * Allows wide tables to scroll horizontally without making
+     * the complete note wider than the viewport.
+     */
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.note-table__markdown {
+    /*
+     * Uses the table's content width for small tables and centers
+     * that content inside the numbered-table container.
+     *
+     * When the table is wider than the available area, the scroll
+     * container above handles the overflow from its left edge.
+     */
+    width: max-content;
+    min-width: min(100%, 36rem);
+    margin-inline: auto;
+}
+
+.note-table__markdown table {
+    /*
+     * The wrapper controls the table's overall width. The HTML
+     * table fills that wrapper and combines neighbouring borders.
+     */
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    text-align: left;
+}
+
+.note-table__markdown th,
+.note-table__markdown td {
+    /*
+     * Visible cell boundaries and comfortable internal spacing.
+     * GFM alignment attributes can still override text alignment
+     * on individual columns.
+     */
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    overflow-wrap: anywhere;
+}
+
+.note-table__markdown th {
+    /*
+     * Slightly separates the header row from the table body.
+     */
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.note-table__markdown tbody tr:nth-child(even) {
+    /*
+     * A subtle alternating row background improves readability
+     * without replacing the visible cell borders.
+     */
+    background: rgba(255, 255, 255, 0.025);
+}
+
+
+/* =========================================================
+   Overall table caption
+   ========================================================= */
+
+.note-table__caption {
+    /*
+     * Vertical distance between the bottom of the table body and
+     * the caption beneath it.
+     */
+    margin: 0.75rem 0 0;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.note-table__number {
+    /*
+     * Makes the "Table X." prefix more prominent.
+     */
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   Table source
+   ========================================================= */
+
+.note-table__source {
+    /*
+     * Vertical distance between the table caption and source.
+     * This matches the corresponding figure spacing.
+     */
+    margin-top: 0.35rem;
+    font-size: 0.875em;
+    opacity: 0.75;
+    text-align: center;
+}
+
+.note-table__source a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}

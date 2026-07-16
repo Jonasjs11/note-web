@@ -137,3 +137,30 @@ export function createFigureToken(
         ],
     );
 }
+
+export interface TableCommandData {
+    markdown: string;
+    caption?: string;
+
+    number: string;
+    anchorId: string;
+
+    sourceUrl?: string;
+    sourceSiteName?: string;
+}
+
+export function createTableToken(
+    data: TableCommandData,
+): string {
+    return encodeCommandToken(
+        "table",
+        [
+            data.markdown,
+            data.caption ?? "",
+            data.number,
+            data.anchorId,
+            data.sourceUrl ?? "",
+            data.sourceSiteName ?? "",
+        ],
+    );
+}

@@ -7,6 +7,10 @@ import type {
     NumberedFigure,
 } from "../references/NumberedFigure";
 
+import type {
+    NumberedTable,
+} from "../references/NumberedTable";
+
 import type { SourceTransformer } from "./Transformer";
 
 import { transformLatexSyntax } from "./transformLatexSyntax";
@@ -25,10 +29,15 @@ import {
     transformFigureEnvironments,
 } from "./transformFigureEnvironments";
 
+import {
+    transformTableEnvironments,
+} from "./transformTableEnvironments";
+
 const transformers: SourceTransformer[] = [
     transformConceptCommands,
     transformReferenceCommands,
     transformFigureEnvironments,
+    transformTableEnvironments,
     transformLatexSyntax,
 ];
 
@@ -38,6 +47,7 @@ export function transformSource(
     references: ReferenceTarget[] = [],
     numberedEquations: NumberedEquation[] = [],
     numberedFigures: NumberedFigure[] = [],
+    numberedTables: NumberedTable[] = [],
 ): DiagnosticResult<string> {
     let transformedSource = source;
 
@@ -49,6 +59,7 @@ export function transformSource(
 
         numberedEquations,
         numberedFigures,
+        numberedTables,
     };
 
     for (const transformer of transformers) {
