@@ -183,3 +183,15 @@ html {
 
     opacity: 0.8;
 }
+
+.note-figure__source {
+    margin-top: 0.35rem;
+    font-size: 0.875em;
+    opacity: 0.75;
+}
+
+.note-figure__source a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}

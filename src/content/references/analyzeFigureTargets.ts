@@ -26,6 +26,14 @@ import {
     findLatexCommands,
 } from "../parser/findLatexCommands";
 
+import type {
+    SourceReference,
+} from "../sources/SourceReference";
+
+import {
+    isWebUrl,
+} from "../sources/isWebUrl";
+
 export function analyzeFigureTargets(
     source: string,
     filePath: string,
@@ -92,6 +100,14 @@ export function analyzeFigureTargets(
             diagnostics,
         );
 
+        const sourceReference = analyzeFigureSource(
+            source,
+            filePath,
+            figureContent,
+            contentStart,
+            diagnostics,
+        );
+
         const label = analyzeFigureLabel(
             source,
             filePath,
@@ -112,6 +128,7 @@ export function analyzeFigureTargets(
             caption,
             label,
             width,
+            sourceReference,
 
             source:
                 completeFigure,
@@ -172,7 +189,7 @@ function analyzeCaption(
                 location: getSourceLocation(
                     completeSource,
                     figureContentStart +
-                        (extraCaption.index ?? 0),
+                        (extraCaption.startOffset),
                 ),
             });
         }
@@ -201,6 +218,137 @@ function analyzeCaption(
     }
 
     return caption;
+}
+
+function analyzeFigureSource(
+    completeSource: string,
+    filePath: string,
+    figureContent: string,
+    figureContentStart: number,
+    diagnostics: Diagnostic[],
+): SourceReference | undefined {
+    const sourceMatches =
+        findLatexCommands(
+            figureContent,
+            "source",
+        );
+
+    if (sourceMatches.length === 0) {
+        return undefined;
+    }
+
+    if (sourceMatches.length > 1) {
+        for (
+            const extraSource of
+            sourceMatches.slice(1)
+        ) {
+            diagnostics.push({
+                severity: "error",
+                message:
+                    "A figure may only have one source.",
+                filePath,
+                location: getSourceLocation(
+                    completeSource,
+                    figureContentStart +
+                        extraSource.startOffset,
+                ),
+            });
+        }
+    }
+
+    const firstSource =
+        sourceMatches[0];
+
+    const url =
+        firstSource.value.trim();
+
+    const sourceIndex =
+        figureContentStart +
+        firstSource.startOffset;
+
+    if (!url) {
+        diagnostics.push({
+            severity: "error",
+            message:
+                "A figure source URL cannot be empty.",
+            filePath,
+            location: getSourceLocation(
+                completeSource,
+                sourceIndex,
+            ),
+        });
+
+        return undefined;
+    }
+
+    if (!isWebUrl(url)) {
+        diagnostics.push({
+            severity: "error",
+            message:
+                "A figure source must be an absolute " +
+                "HTTP or HTTPS URL.",
+            filePath,
+            location: getSourceLocation(
+                completeSource,
+                sourceIndex,
+            ),
+        });
+
+        return undefined;
+    }
+
+    const optionalSiteName =
+        readOptionalSquareArgument(
+            figureContent,
+            firstSource.endOffset,
+        );
+
+    if (
+        optionalSiteName.kind ===
+        "unclosed"
+    ) {
+        diagnostics.push({
+            severity: "error",
+            message:
+                "The optional source site name " +
+                "is missing its closing bracket.",
+            filePath,
+            location: getSourceLocation(
+                completeSource,
+                figureContentStart +
+                    optionalSiteName.startOffset,
+            ),
+        });
+    }
+
+    const siteName =
+        optionalSiteName.kind === "value"
+            ? optionalSiteName.value.trim()
+            : undefined;
+
+    if (
+        optionalSiteName.kind === "value" &&
+        !siteName
+    ) {
+        diagnostics.push({
+            severity: "warning",
+            message:
+                "The optional source site name is empty.",
+            filePath,
+            location: getSourceLocation(
+                completeSource,
+                figureContentStart +
+                    optionalSiteName.startOffset,
+            ),
+        });
+    }
+
+    return {
+        kind: "web",
+        url,
+        siteName:
+            siteName || undefined,
+    };
 }
 
 function analyzeFigureLabel(
@@ -239,7 +387,7 @@ function analyzeFigureLabel(
                 location: getSourceLocation(
                     completeSource,
                     figureContentStart +
-                        (extraLabel.index ?? 0),
+                        (extraLabel.startOffset),
                 ),
             });
         }
@@ -380,4 +528,78 @@ function normalizeFigureWidth(
     }
 
     return undefined;
+}
+
+type OptionalSquareArgument =
+    | {
+          kind: "none";
+      }
+    | {
+          kind: "value";
+          value: string;
+          startOffset: number;
+      }
+    | {
+          kind: "unclosed";
+          startOffset: number;
+      };
+
+function readOptionalSquareArgument(
+    source: string,
+    startOffset: number,
+): OptionalSquareArgument {
+    let index = startOffset;
+
+    while (
+        index < source.length &&
+        /\s/.test(source[index])
+    ) {
+        index++;
+    }
+
+    if (source[index] !== "[") {
+        return {
+            kind: "none",
+        };
+    }
+
+    const openingBracket =
+        index;
+
+    const valueStart =
+        openingBracket + 1;
+
+    for (
+        index = valueStart;
+        index < source.length;
+        index++
+    ) {
+        if (
+            source[index] === "\\" &&
+            index + 1 < source.length
+        ) {
+            index++;
+            continue;
+        }
+
+        if (source[index] !== "]") {
+            continue;
+        }
+
+        return {
+            kind: "value",
+            value: source.slice(
+                valueStart,
+                index,
+            ),
+            startOffset:
+                openingBracket,
+        };
+    }
+
+    return {
+        kind: "unclosed",
+        startOffset:
+            openingBracket,
+    };
 }

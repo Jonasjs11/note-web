@@ -26,6 +26,10 @@ import {
     findLatexCommands,
 } from "../parser/findLatexCommands";
 
+import {
+    isWebUrl,
+} from "../sources/isWebUrl";
+
 export function transformFigureEnvironments(
     source: string,
     _filePath: string,
@@ -101,9 +105,11 @@ function transformFiguresInText(
                 );
 
             const imageUrl = imagePath
-                ? findFigureAsset(
-                      imagePath,
-                  )
+                ? isWebUrl(imagePath)
+                    ? imagePath
+                    : findFigureAsset(
+                        imagePath,
+                    )
                 : undefined;
 
             const anchorId =
@@ -129,6 +135,15 @@ function transformFiguresInText(
                         numberedFigure.number.toString(),
                     anchorId,
                     width: numberedFigure.width,
+                    sourceUrl:
+                        numberedFigure
+                            .sourceReference
+                            ?.url,
+
+                    sourceSiteName:
+                        numberedFigure
+                            .sourceReference
+                            ?.siteName,
                 }) +
                 "\n\n"
             );

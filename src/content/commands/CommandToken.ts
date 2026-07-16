@@ -93,6 +93,9 @@ export interface FigureCommandData {
     number: string;
     anchorId: string;
     width?: string;
+
+    sourceUrl?: string;
+    sourceSiteName?: string;
 }
 
 export function createFigureToken(
@@ -107,6 +110,8 @@ export function createFigureToken(
             data.number,
             data.anchorId,
             data.width ?? "",
+            data.sourceUrl ?? "",
+            data.sourceSiteName ?? "",
         ],
     );
 }

@@ -1,9 +1,15 @@
+import type {
+    SourceReference,
+} from "../sources/SourceReference";
+
 export interface NumberedFigure {
     number: number;
 
     caption?: string;
     label?: string;
     width?: string;
+
+    sourceReference?: SourceReference;
 
     /*
      * The complete authored figure environment.

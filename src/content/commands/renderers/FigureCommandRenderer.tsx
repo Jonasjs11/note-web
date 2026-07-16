@@ -5,6 +5,13 @@ import type {
 import InlineMarkdownRenderer
     from "../../../components/Markdown/InlineMarkdownRenderer";
 
+import {
+    getSourceHostname,
+} from "../../sources/getSourceHostName";
+
+import FigureImage
+    from "../../../components/Figures/FigureImage";
+
 const FigureCommandRenderer:
     CommandRenderer = {
         render(arguments_) {
@@ -26,6 +33,30 @@ const FigureCommandRenderer:
             const width =
                 arguments_[5];
 
+            const sourceUrl =
+                arguments_[6];
+
+            const sourceSiteName =
+                arguments_[7];
+            
+            const sourceHostname =
+                sourceUrl
+                    ? getSourceHostname({
+                        kind: "web",
+                        url: sourceUrl,
+                        siteName:
+                            sourceSiteName ||
+                            undefined,
+                    })
+                    : undefined;
+
+            const sourceText =
+                sourceHostname
+                    ? sourceSiteName
+                        ? `${sourceSiteName} (${sourceHostname})`
+                        : sourceHostname
+                    : undefined;
+
             if (
                 !number ||
                 !anchorId
@@ -43,26 +74,21 @@ const FigureCommandRenderer:
                     className="note-figure"
                 >
                     {imageUrl ? (
-                        <img
-                            src={imageUrl}
-                            alt={
-                                caption ||
-                                `Figure ${number}`
-                            }
-                            className="note-figure__image"
-                            style={
-                                width
-                                    ? {
-                                        width,
-                                    }
-                                    : undefined
+                        <FigureImage
+                            imageUrl={imageUrl}
+                            imagePath={imagePath}
+                            caption={caption}
+                            number={number}
+                            width={
+                                width ||
+                                undefined
                             }
                         />
                     ) : (
                         <div className="note-figure__error">
                             Unable to find image
                             {imagePath
-                                ? ` "${imagePath}"`
+                                ? ` "${imagePath}".`
                                 : "."}
                         </div>
                     )}
@@ -73,6 +99,19 @@ const FigureCommandRenderer:
                             source={caption}
                         />
                     </figcaption>
+
+                    {sourceUrl && sourceText && (
+                        <div className="note-figure__source">
+                            Source:{" "}
+                            <a
+                                href={sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                {sourceText}
+                            </a>
+                        </div>
+                    )}
                 </figure>
             );
         },
