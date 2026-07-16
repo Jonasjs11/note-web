@@ -4,6 +4,8 @@ import ConceptCommandRenderer from "./renderers/ConceptCommandRenderer";
 
 import ReferenceCommandRenderer from "./renderers/ReferenceCommandRenderer";
 
+import FigureCommandRenderer from "./renderers/FigureCommandRenderer";
+
 export const commandRegistry =
     new Map<string, CommandRenderer>([
         [
@@ -13,5 +15,9 @@ export const commandRegistry =
         [
             "reference",
             ReferenceCommandRenderer,
+        ],
+        [
+            "figure",
+            FigureCommandRenderer,
         ],
     ]);

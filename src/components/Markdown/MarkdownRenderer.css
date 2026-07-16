@@ -148,3 +148,38 @@
 html {
     scroll-behavior: smooth;
 }
+
+.note-figure {
+    margin: 2rem auto;
+    max-width: min(100%, 52rem);
+    text-align: center;
+}
+
+.note-figure__image {
+    display: block;
+
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+
+    border-radius: 0.5rem;
+}
+
+.note-figure__caption {
+    margin-top: 0.75rem;
+    line-height: 1.5;
+}
+
+.note-figure__number {
+    font-weight: 600;
+}
+
+.note-figure__error {
+    box-sizing: border-box;
+
+    padding: 1rem;
+    border: 1px solid currentColor;
+    border-radius: 0.5rem;
+
+    opacity: 0.8;
+}

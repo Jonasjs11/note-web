@@ -5,9 +5,15 @@ import type {
     NumberedEquation,
 } from "../references/NumberedEquation";
 
+import type {
+    NumberedFigure,
+} from "../references/NumberedFigure";
+
 export interface SourceTransformContext {
     referenceRegistry: ReferenceRegistry;
+
     numberedEquations: NumberedEquation[];
+    numberedFigures: NumberedFigure[];
 }
 
 export type SourceTransformer = (

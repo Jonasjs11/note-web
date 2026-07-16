@@ -25,6 +25,7 @@ type HastNode =
 export default function rehypeCommandTokens() {
     return function transform(tree: HastRoot): void {
         processChildren(tree);
+        unwrapBlockCommandParagraphs(tree);
     };
 }
 
@@ -93,4 +94,88 @@ function convertTextNode(
             children: [],
         };
     });
+}
+const blockCommands = new Set([
+    "figure",
+]);
+
+function unwrapBlockCommandParagraphs(
+    node: HastRoot | HastElement,
+): void {
+    for (
+        let index = 0;
+        index < node.children.length;
+        index++
+    ) {
+        const child = node.children[index];
+
+        if (
+            child.type === "root" ||
+            child.type === "element"
+        ) {
+            unwrapBlockCommandParagraphs(
+                child,
+            );
+        }
+
+        if (
+            child.type !== "element" ||
+            child.tagName !== "p"
+        ) {
+            continue;
+        }
+
+        const meaningfulChildren =
+            child.children.filter(
+                (paragraphChild) => {
+                    return !(
+                        paragraphChild.type ===
+                            "text" &&
+                        !paragraphChild.value.trim()
+                    );
+                },
+            );
+
+        if (
+            meaningfulChildren.length !== 1
+        ) {
+            continue;
+        }
+
+        const onlyChild =
+            meaningfulChildren[0];
+
+        if (
+            !isBlockCommandElement(
+                onlyChild,
+            )
+        ) {
+            continue;
+        }
+
+        node.children.splice(
+            index,
+            1,
+            onlyChild,
+        );
+    }
+}
+
+function isBlockCommandElement(
+    node: HastNode,
+): node is HastElement {
+    if (
+        node.type !== "element" ||
+        node.tagName !== "command-token"
+    ) {
+        return false;
+    }
+
+    const command =
+        node.properties.command;
+
+    return (
+        typeof command === "string" &&
+        blockCommands.has(command)
+    );
 }

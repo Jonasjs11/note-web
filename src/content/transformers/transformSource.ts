@@ -3,6 +3,10 @@ import type {
     DiagnosticResult,
 } from "../models/Diagnostic";
 
+import type {
+    NumberedFigure,
+} from "../references/NumberedFigure";
+
 import type { SourceTransformer } from "./Transformer";
 
 import { transformLatexSyntax } from "./transformLatexSyntax";
@@ -17,13 +21,23 @@ import type {
     NumberedEquation,
 } from "../references/NumberedEquation";
 
-const transformers: SourceTransformer[] = [transformConceptCommands, transformReferenceCommands, transformLatexSyntax];
+import {
+    transformFigureEnvironments,
+} from "./transformFigureEnvironments";
+
+const transformers: SourceTransformer[] = [
+    transformConceptCommands,
+    transformReferenceCommands,
+    transformFigureEnvironments,
+    transformLatexSyntax,
+];
 
 export function transformSource(
     source: string,
     filePath: string,
     references: ReferenceTarget[] = [],
     numberedEquations: NumberedEquation[] = [],
+    numberedFigures: NumberedFigure[] = [],
 ): DiagnosticResult<string> {
     let transformedSource = source;
 
@@ -34,6 +48,7 @@ export function transformSource(
             new ReferenceRegistry(references),
 
         numberedEquations,
+        numberedFigures,
     };
 
     for (const transformer of transformers) {

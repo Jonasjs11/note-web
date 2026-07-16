@@ -12,7 +12,7 @@ export function transformLatexSyntax(
     let transformedSource = source;
 
     transformedSource = transformEquationNumbers(
-        source,
+        transformedSource,
         context.numberedEquations,
     );
 

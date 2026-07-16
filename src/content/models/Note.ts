@@ -2,6 +2,10 @@ import type { Diagnostic } from "./Diagnostic";
 
 import type { ReferenceTarget } from "../references/ReferenceTarget";
 
+import type {
+    NumberedFigure,
+} from "../references/NumberedFigure";
+
 export interface Note {
     id: string;
     title: string;
@@ -16,5 +20,6 @@ export interface Note {
     transformedSource: string;
 
     references: ReferenceTarget[];
+    numberedFigures: NumberedFigure[];
     diagnostics: Diagnostic[];
 }

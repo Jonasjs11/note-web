@@ -84,3 +84,29 @@ export function createReferenceToken(
         arguments_,
     );
 }
+
+export interface FigureCommandData {
+    imageUrl?: string;
+    imagePath: string;
+
+    caption?: string;
+    number: string;
+    anchorId: string;
+    width?: string;
+}
+
+export function createFigureToken(
+    data: FigureCommandData,
+): string {
+    return encodeCommandToken(
+        "figure",
+        [
+            data.imageUrl ?? "",
+            data.imagePath,
+            data.caption ?? "",
+            data.number,
+            data.anchorId,
+            data.width ?? "",
+        ],
+    );
+}

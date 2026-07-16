@@ -4,6 +4,10 @@ import { transformSource } from "../transformers/transformSource";
 
 import { analyzeEquationTargets } from "../references/analyzeEquationTargets";
 
+import {
+    analyzeFigureTargets,
+} from "../references/analyzeFigureTargets";
+
 const noteFiles = import.meta.glob(
     "../notes/**/*.mdx",
     {
@@ -33,12 +37,23 @@ function createNote(
 
     const referenceAnalysis = analyzeEquationTargets(source, filePath);
 
-    const transformationResult =
-    transformSource(
+    const figureAnalysis = analyzeFigureTargets(
         source,
         filePath,
         referenceAnalysis.targets,
+    );
+
+    const referenceTargets = [
+        ...referenceAnalysis.targets,
+        ...figureAnalysis.targets,
+    ];
+
+    const transformationResult = transformSource(
+        source,
+        filePath,
+        referenceTargets,
         referenceAnalysis.numberedEquations,
+        figureAnalysis.numberedFigures,
     );
 
     if (segments.length < 2) {
@@ -74,10 +89,13 @@ function createNote(
         source,
         transformedSource: transformationResult.value,
 
-        references: referenceAnalysis.targets,
+        references: referenceTargets,
+
+        numberedFigures: figureAnalysis.numberedFigures,
         diagnostics: [
             ...titleResult.diagnostics,
             ...referenceAnalysis.diagnostics,
+            ...figureAnalysis.diagnostics,
             ...transformationResult.diagnostics,
         ],
     };
