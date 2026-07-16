@@ -8,6 +8,10 @@ import type {
     ReferenceTarget,
 } from "./ReferenceTarget";
 
+import {
+    findLatexCommands,
+} from "../parser/findLatexCommands";
+
 export type NumberedObjectDescription =
     | "equation"
     | "align row";
@@ -43,14 +47,11 @@ export function analyzeNumberedObjectLabels({
     targets,
     diagnostics,
 }: AnalyzeNumberedObjectLabelsOptions): string | undefined {
-    const labelPattern =
-        /\\label\{([^{}]*)\}/g;
-
-    const labelMatches = [
-        ...objectSource.matchAll(
-            labelPattern,
-        ),
-    ];
+    const labelMatches =
+        findLatexCommands(
+            objectSource,
+            "label",
+        );
 
     if (labelMatches.length === 0) {
         return undefined;
@@ -80,11 +81,11 @@ export function analyzeNumberedObjectLabels({
         labelMatches[0];
 
     const label =
-        firstLabelMatch[1].trim();
+        firstLabelMatch.value.trim();
 
     const labelIndex =
         objectStart +
-        (firstLabelMatch.index ?? 0);
+        (firstLabelMatch.startOffset);
 
     if (!label) {
         diagnostics.push({

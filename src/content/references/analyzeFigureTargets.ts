@@ -22,6 +22,10 @@ import type {
     ReferenceTarget,
 } from "./ReferenceTarget";
 
+import {
+    findLatexCommands,
+} from "../parser/findLatexCommands";
+
 export function analyzeFigureTargets(
     source: string,
     filePath: string,
@@ -134,14 +138,11 @@ function analyzeCaption(
     figureContentStart: number,
     diagnostics: Diagnostic[],
 ): string | undefined {
-    const captionPattern =
-        /\\caption\{([^{}]*)\}/g;
-
-    const captionMatches = [
-        ...figureContent.matchAll(
-            captionPattern,
-        ),
-    ];
+    const captionMatches =
+        findLatexCommands(
+            figureContent,
+            "caption",
+        );
 
     if (captionMatches.length === 0) {
         diagnostics.push({
@@ -181,7 +182,7 @@ function analyzeCaption(
         captionMatches[0];
 
     const caption =
-        firstCaption[1].trim();
+        firstCaption.value.trim();
 
     if (!caption) {
         diagnostics.push({
@@ -192,7 +193,7 @@ function analyzeCaption(
             location: getSourceLocation(
                 completeSource,
                 figureContentStart +
-                    (firstCaption.index ?? 0),
+                    (firstCaption.startOffset ?? 0),
             ),
         });
 
@@ -215,14 +216,11 @@ function analyzeFigureLabel(
     targets: ReferenceTarget[],
     diagnostics: Diagnostic[],
 ): string | undefined {
-    const labelPattern =
-        /\\label\{([^{}]*)\}/g;
-
-    const labelMatches = [
-        ...figureContent.matchAll(
-            labelPattern,
-        ),
-    ];
+    const labelMatches =
+        findLatexCommands(
+            figureContent,
+            "label",
+        );
 
     if (labelMatches.length === 0) {
         return undefined;
@@ -251,11 +249,11 @@ function analyzeFigureLabel(
         labelMatches[0];
 
     const label =
-        firstLabel[1].trim();
+        firstLabel.value.trim();
 
     const labelIndex =
         figureContentStart +
-        (firstLabel.index ?? 0);
+        (firstLabel.startOffset ?? 0);
 
     if (!label) {
         diagnostics.push({
