@@ -4,6 +4,10 @@ import type {
 } from "../models/Diagnostic";
 
 import type {
+    NumberedEquation,
+} from "../references/NumberedEquation";
+
+import type {
     NumberedFigure,
 } from "../references/NumberedFigure";
 
@@ -11,29 +15,53 @@ import type {
     NumberedTable,
 } from "../references/NumberedTable";
 
-import type { SourceTransformer } from "./Transformer";
-
-import { transformLatexSyntax } from "./transformLatexSyntax";
-import { transformConceptCommands } from "./transformConceptCommands";
-
-import { ReferenceRegistry } from "../references/ReferenceRegistry";
-import type { ReferenceTarget } from "../references/ReferenceTarget";
-
-import { transformReferenceCommands } from "./transformReferenceCommands";
+import {
+    ReferenceRegistry,
+} from "../references/ReferenceRegistry";
 
 import type {
-    NumberedEquation,
-} from "../references/NumberedEquation";
+    ReferenceTarget,
+} from "../references/ReferenceTarget";
+
+import type {
+    Section,
+} from "../references/Section";
+
+import {
+    transformConceptCommands,
+} from "./transformConceptCommands";
 
 import {
     transformFigureEnvironments,
 } from "./transformFigureEnvironments";
 
 import {
+    transformLatexSyntax,
+} from "./transformLatexSyntax";
+
+import {
+    transformReferenceCommands,
+} from "./transformReferenceCommands";
+
+import {
+    transformSectionHeadings,
+} from "./transformSectionHeadings";
+
+import {
     transformTableEnvironments,
 } from "./transformTableEnvironments";
 
+import type {
+    SourceTransformer,
+} from "./Transformer";
+
 const transformers: SourceTransformer[] = [
+    /*
+     * Section anchors must be inserted while headings still match the
+     * exact source inspected by analyzeSectionTargets().
+     */
+    transformSectionHeadings,
+
     transformConceptCommands,
     transformReferenceCommands,
     transformFigureEnvironments,
@@ -48,6 +76,7 @@ export function transformSource(
     numberedEquations: NumberedEquation[] = [],
     numberedFigures: NumberedFigure[] = [],
     numberedTables: NumberedTable[] = [],
+    sections: Section[] = [],
 ): DiagnosticResult<string> {
     let transformedSource = source;
 
@@ -60,6 +89,7 @@ export function transformSource(
         numberedEquations,
         numberedFigures,
         numberedTables,
+        sections,
     };
 
     for (const transformer of transformers) {
@@ -70,7 +100,9 @@ export function transformSource(
         );
 
         transformedSource = result.value;
-        diagnostics.push(...result.diagnostics);
+        diagnostics.push(
+            ...result.diagnostics,
+        );
     }
 
     return {

@@ -13,6 +13,9 @@ export interface CommandTokenData {
     arguments: string[];
 }
 
+export type DecodedCommandToken =
+    CommandTokenData;
+
 export function encodeCommandToken(
     command: string,
     arguments_: string[],
@@ -59,7 +62,7 @@ export function createConceptToken(
 export interface ReferenceTokenTarget {
     type: ReferenceType;
     anchorId: string;
-    number: string;
+    displayText: string;
 }
 
 export interface ReferenceCommandData {
@@ -75,13 +78,23 @@ export function createReferenceToken(
         ...data.targets.flatMap((target) => [
             target.type,
             target.anchorId,
-            target.number,
+            target.displayText,
         ]),
     ];
 
     return encodeCommandToken(
         "reference",
         arguments_,
+    );
+}
+
+
+export function createSectionAnchorToken(
+    anchorId: string,
+): string {
+    return encodeCommandToken(
+        "section-anchor",
+        [anchorId],
     );
 }
 

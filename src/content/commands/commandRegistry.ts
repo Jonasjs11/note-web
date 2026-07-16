@@ -8,6 +8,9 @@ import FigureCommandRenderer from "./renderers/FigureCommandRenderer";
 
 import TableCommandRenderer from "./renderers/TableCommandRenderer";
 
+import SectionAnchorCommandRenderer from "./renderers/SectionAnchorCommandRenderer";
+
+
 export const commandRegistry =
     new Map<string, CommandRenderer>([
         [
@@ -26,4 +29,8 @@ export const commandRegistry =
             "table",
             TableCommandRenderer,
         ],
+        [
+            "section-anchor", 
+            SectionAnchorCommandRenderer,
+        ]
     ]);

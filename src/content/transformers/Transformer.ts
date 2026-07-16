@@ -1,5 +1,10 @@
-import type { DiagnosticResult } from "../models/Diagnostic";
-import type { ReferenceRegistry } from "../references/ReferenceRegistry";
+import type {
+    DiagnosticResult,
+} from "../models/Diagnostic";
+
+import type {
+    ReferenceRegistry,
+} from "../references/ReferenceRegistry";
 
 import type {
     NumberedEquation,
@@ -13,12 +18,18 @@ import type {
     NumberedTable,
 } from "../references/NumberedTable";
 
+import type {
+    Section,
+} from "../references/Section";
+
 export interface SourceTransformContext {
     referenceRegistry: ReferenceRegistry;
 
     numberedEquations: NumberedEquation[];
     numberedFigures: NumberedFigure[];
     numberedTables: NumberedTable[];
+
+    sections: Section[];
 }
 
 export type SourceTransformer = (

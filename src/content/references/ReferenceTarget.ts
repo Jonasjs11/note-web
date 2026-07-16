@@ -13,7 +13,13 @@ export interface ReferenceTarget {
     label: string;
     type: ReferenceType;
 
-    number: ReferenceNumber;
+    /**
+     * Numbered targets use number. Unnumbered semantic targets, such
+     * as sections, use displayText instead.
+     */
+    number?: ReferenceNumber;
+    displayText?: string;
+
     anchorId: string;
 
     parentLabel?: string;

@@ -1,42 +1,72 @@
+import {
+    Fragment,
+} from "react";
+
 import type {
-    MouseEvent,
     ReactNode,
 } from "react";
 
-import type { ReferenceType } from "../../references/ReferenceTarget";
+import type {
+    ReferenceType,
+} from "../../references/ReferenceTarget";
 
-import type { CommandRenderer } from "../CommandRenderer";
+import type {
+    CommandRenderer,
+} from "../CommandRenderer";
 
 interface RenderTarget {
     type: ReferenceType;
     anchorId: string;
-    number: string;
+    displayText: string;
 }
 
-const ReferenceCommandRenderer: CommandRenderer = {
-    render(arguments_) {
-        const capitalize =
-            arguments_[0] === "true";
+const singularNames: Record<
+    Exclude<ReferenceType, "section">,
+    string
+> = {
+    equation: "equation",
+    figure: "figure",
+    table: "table",
+};
 
-        const targets =
-            parseTargets(
-                arguments_.slice(1),
-            );
+const pluralNames: Record<
+    Exclude<ReferenceType, "section">,
+    string
+> = {
+    equation: "equations",
+    figure: "figures",
+    table: "tables",
+};
 
-        if (targets.length === 0) {
+const ReferenceCommandRenderer:
+    CommandRenderer = {
+        render(arguments_) {
+            const capitalize =
+                arguments_[0] === "true";
+
+            const targets =
+                parseTargets(
+                    arguments_.slice(1),
+                );
+
+            if (targets.length === 0) {
+                return (
+                    <span className="command-error">
+                        Invalid reference
+                    </span>
+                );
+            }
+
             return (
-                <span className="command-error">
-                    Invalid reference
+                <span className="reference">
+                    {renderTargets(
+                        targets,
+                        capitalize,
+                    )}
                 </span>
             );
-        }
-
-        return renderReferenceList(
-            targets,
-            capitalize,
-        );
-    },
-};
+        },
+    };
 
 function parseTargets(
     arguments_: string[],
@@ -51,13 +81,13 @@ function parseTargets(
         const type = arguments_[index];
         const anchorId =
             arguments_[index + 1];
-        const number =
+        const displayText =
             arguments_[index + 2];
 
         if (
             !isReferenceType(type) ||
             !anchorId ||
-            !number
+            !displayText
         ) {
             continue;
         }
@@ -65,294 +95,209 @@ function parseTargets(
         targets.push({
             type,
             anchorId,
-            number,
+            displayText,
         });
     }
 
     return targets;
 }
 
-function renderReferenceList(
+function renderTargets(
     targets: RenderTarget[],
     capitalize: boolean,
 ): ReactNode {
-    const allSameType = targets.every(
-        (target) => {
-            return (
-                target.type ===
-                targets[0].type
-            );
-        },
+    const firstType =
+        targets[0].type;
+
+    const sameType = targets.every(
+        (target) =>
+            target.type === firstType,
     );
 
-    if (allSameType) {
-        return renderSameTypeReferences(
+    if (sameType) {
+        if (firstType === "section") {
+            return joinNodes(
+                targets.map(
+                    (target, index) =>
+                        renderSectionLink(
+                            target,
+                            capitalize &&
+                                index === 0,
+                        ),
+                ),
+            );
+        }
+
+        return renderSameNumberedType(
             targets,
+            firstType,
             capitalize,
         );
     }
 
-    return renderMixedReferences(
-        targets,
-        capitalize,
+    return joinNodes(
+        targets.map(
+            (target, index) =>
+                renderMixedTarget(
+                    target,
+                    capitalize && index === 0,
+                ),
+        ),
     );
 }
 
-function renderSameTypeReferences(
+function renderSameNumberedType(
     targets: RenderTarget[],
+    type: Exclude<
+        ReferenceType,
+        "section"
+    >,
     capitalize: boolean,
 ): ReactNode {
-    const typeName = getTypeName(
-        targets[0].type,
-        targets.length > 1,
-    );
-
-    const displayedTypeName = capitalize
-        ? capitalizeFirst(typeName)
-        : typeName;
-
     if (targets.length === 1) {
-        const target = targets[0];
+        const prefix =
+            applyCapitalization(
+                singularNames[type],
+                capitalize,
+            );
 
         return (
-            <ReferenceLink target={target}>
-                {displayedTypeName}{" "}
-                {target.number}
-            </ReferenceLink>
+            <a
+                href={`#${targets[0].anchorId}`}
+                className="reference-link"
+            >
+                {prefix} {targets[0].displayText}
+            </a>
         );
     }
 
+    const prefix =
+        applyCapitalization(
+            pluralNames[type],
+            capitalize,
+        );
+
     return (
         <>
-            {displayedTypeName}
-            {" "}
-            {renderLinkedNumbers(targets)}
-        </>
-    );
-}
-function renderMixedReferences(
-    targets: RenderTarget[],
-    capitalize: boolean,
-): ReactNode {
-    return (
-        <>
-            {targets.map(
-                (target, index) => {
-                    const typeName =
-                        getTypeName(
-                            target.type,
-                            false,
-                        );
-
-                    const displayedTypeName =
-                        index === 0 &&
-                        capitalize
-                            ? capitalizeFirst(
-                                  typeName,
-                              )
-                            : typeName;
-
-                    return (
-                        <span key={target.anchorId}>
-                            {index > 0 &&
-                                getSeparator(
-                                    index,
-                                    targets.length,
-                                )}
-
-                            {displayedTypeName}
-                            {" "}
-
-                            <ReferenceLink
-                                target={target}
-                            />
-                        </span>
-                    );
-                },
+            {prefix}{" "}
+            {joinNodes(
+                targets.map(
+                    renderNumberLink,
+                ),
             )}
         </>
     );
 }
 
-function renderLinkedNumbers(
-    targets: RenderTarget[],
+function renderMixedTarget(
+    target: RenderTarget,
+    capitalize: boolean,
 ): ReactNode {
-    return targets.map(
-        (target, index) => (
-            <span key={target.anchorId}>
-                {index > 0 &&
-                    getSeparator(
-                        index,
-                        targets.length,
-                    )}
-
-                <ReferenceLink
-                    target={target}
-                />
-            </span>
-        ),
-    );
-}
-
-function ReferenceLink({
-    target,
-    children,
-}: {
-    target: RenderTarget;
-    children?: ReactNode;
-}) {
-    function handleClick(
-        event: MouseEvent<HTMLAnchorElement>,
-    ): void {
-        event.preventDefault();
-
-        scrollToReferenceTarget(
-            target.anchorId,
+    if (target.type === "section") {
+        return renderSectionLink(
+            target,
+            capitalize,
         );
     }
 
+    const prefix =
+        applyCapitalization(
+            singularNames[target.type],
+            capitalize,
+        );
+
     return (
         <a
+            key={target.anchorId}
             href={`#${target.anchorId}`}
             className="reference-link"
-            onClick={handleClick}
         >
-            {children ?? target.number}
+            {prefix} {target.displayText}
         </a>
     );
 }
 
-function scrollToReferenceTarget(
-    anchorId: string,
-): void {
-    const target =
-        document.getElementById(anchorId);
-
-    if (!target) {
-        console.warn(
-            `Reference target "${anchorId}" was not found.`,
-        );
-
-        return;
-    }
-
-    const scrollContainer =
-        findScrollableAncestor(target);
-
-    const topOffset = 18; // CHANGE THIS
-
-    if (scrollContainer) {
-        const containerRect =
-            scrollContainer.getBoundingClientRect();
-
-        const targetRect =
-            target.getBoundingClientRect();
-
-        const targetTop =
-            scrollContainer.scrollTop +
-            targetRect.top -
-            containerRect.top -
-            topOffset;
-
-        scrollContainer.scrollTo({
-            top: targetTop,
-            behavior: "smooth",
-        });
-    } else {
-        const targetTop =
-            window.scrollY +
-            target.getBoundingClientRect().top -
-            topOffset;
-
-        window.scrollTo({
-            top: targetTop,
-            behavior: "smooth",
-        });
-    }
-
-    window.history.pushState(
-        null,
-        "",
-        `#${anchorId}`,
+function renderSectionLink(
+    target: RenderTarget,
+    capitalize: boolean,
+): ReactNode {
+    return (
+        <a
+            key={target.anchorId}
+            href={`#${target.anchorId}`}
+            className="reference-link reference-link--section"
+        >
+            {applyCapitalization(
+                target.displayText,
+                capitalize,
+            )}
+        </a>
     );
 }
 
-function findScrollableAncestor(
-    element: Element,
-): HTMLElement | undefined {
-    let parent = element.parentElement;
-
-    while (parent) {
-        const style =
-            window.getComputedStyle(parent);
-
-        const overflowY =
-            style.overflowY;
-
-        const canScroll =
-            (
-                overflowY === "auto" ||
-                overflowY === "scroll"
-            ) &&
-            parent.scrollHeight >
-                parent.clientHeight;
-
-        if (canScroll) {
-            return parent;
-        }
-
-        parent = parent.parentElement;
-    }
-
-    return undefined;
-}
-
-function getSeparator(
-    index: number,
-    total: number,
-): string {
-    if (index === total - 1) {
-        return total === 2
-            ? " and "
-            : ", and ";
-    }
-
-    return ", ";
-}
-
-function getTypeName(
-    type: ReferenceType,
-    plural: boolean,
-): string {
-    switch (type) {
-        case "equation":
-            return plural
-                ? "equations"
-                : "equation";
-
-        case "figure":
-            return plural
-                ? "figures"
-                : "figure";
-
-        case "table":
-            return plural
-                ? "tables"
-                : "table";
-
-        case "section":
-            return plural
-                ? "sections"
-                : "section";
-    }
-}
-
-function capitalizeFirst(
-    value: string,
-): string {
+function renderNumberLink(
+    target: RenderTarget,
+): ReactNode {
     return (
-        value.charAt(0).toUpperCase() +
-        value.slice(1)
+        <a
+            key={target.anchorId}
+            href={`#${target.anchorId}`}
+            className="reference-link"
+        >
+            {target.displayText}
+        </a>
+    );
+}
+
+function joinNodes(
+    nodes: ReactNode[],
+): ReactNode {
+    if (nodes.length <= 1) {
+        return nodes[0] ?? null;
+    }
+
+    if (nodes.length === 2) {
+        return (
+            <>
+                {nodes[0]} and {nodes[1]}
+            </>
+        );
+    }
+
+    return nodes.map(
+        (node, index) => (
+            <Fragment key={index}>
+                {index === 0
+                    ? ""
+                    : index ===
+                        nodes.length - 1
+                      ? ", and "
+                      : ", "}
+                {node}
+            </Fragment>
+        ),
+    );
+}
+
+function applyCapitalization(
+    value: string,
+    capitalize: boolean,
+): string {
+    if (!capitalize) {
+        return value;
+    }
+
+    const letterIndex =
+        value.search(/[A-Za-zÆØÅæøå]/);
+
+    if (letterIndex === -1) {
+        return value;
+    }
+
+    return (
+        value.slice(0, letterIndex) +
+        value[letterIndex].toLocaleUpperCase() +
+        value.slice(letterIndex + 1)
     );
 }
 

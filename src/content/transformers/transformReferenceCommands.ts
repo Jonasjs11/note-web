@@ -7,15 +7,33 @@ import {
     createReferenceToken,
 } from "../commands/CommandToken";
 
-import { findClosestMatch } from "../diagnostics/findClosestMatch";
-import { getSourceLocation } from "../parser/getSourceLocation";
+import {
+    findClosestMatch,
+} from "../diagnostics/findClosestMatch";
 
-import type { SourceTransformContext } from "./Transformer";
-import { transformMarkdownText } from "./transformMarkdownText";
+import {
+    getSourceLocation,
+} from "../parser/getSourceLocation";
 
-import type { ReferenceRegistry } from "../references/ReferenceRegistry";
-import { formatReferenceNumber } from "../references/formatReferenceNumber";
-import type { ReferenceTarget } from "../references/ReferenceTarget";
+import type {
+    ReferenceRegistry,
+} from "../references/ReferenceRegistry";
+
+import {
+    formatReferenceNumber,
+} from "../references/formatReferenceNumber";
+
+import type {
+    ReferenceTarget,
+} from "../references/ReferenceTarget";
+
+import type {
+    SourceTransformContext,
+} from "./Transformer";
+
+import {
+    transformMarkdownText,
+} from "./transformMarkdownText";
 
 export function transformReferenceCommands(
     source: string,
@@ -24,21 +42,18 @@ export function transformReferenceCommands(
 ): DiagnosticResult<string> {
     const diagnostics: Diagnostic[] = [];
 
-    const registry = context.referenceRegistry;
-
     const transformedSource =
         transformMarkdownText(
             source,
-            (text, sourceOffset) => {
-                return transformReferencesInText(
+            (text, sourceOffset) =>
+                transformReferencesInText(
                     text,
                     source,
                     filePath,
                     sourceOffset,
-                    registry,
+                    context.referenceRegistry,
                     diagnostics,
-                );
-            },
+                ),
         );
 
     return {
@@ -71,7 +86,9 @@ function transformReferencesInText(
 
             const labels = rawLabels
                 .split(",")
-                .map((label) => label.trim())
+                .map(
+                    (label) => label.trim(),
+                )
                 .filter(Boolean);
 
             if (labels.length === 0) {
@@ -114,16 +131,13 @@ function transformReferencesInText(
                         registry.labels(),
                     );
 
-                const suggestionText =
-                    suggestion
-                        ? ` Did you mean "${suggestion}"?`
-                        : "";
-
                 diagnostics.push({
                     severity: "error",
                     message:
                         `Unknown reference "${label}".` +
-                        suggestionText,
+                        (suggestion
+                            ? ` Did you mean "${suggestion}"?`
+                            : ""),
                     filePath,
                     location: getSourceLocation(
                         completeSource,
@@ -136,30 +150,49 @@ function transformReferencesInText(
                 return fullMatch;
             }
 
-            const validTargets = targets.filter(
-                (
-                    target,
-                ): target is ReferenceTarget => {
-                    return target !== undefined;
-                },
-            );
+            const validTargets =
+                targets.filter(
+                    (
+                        target,
+                    ): target is ReferenceTarget =>
+                        target !== undefined,
+                );
 
             return createReferenceToken({
                 capitalize:
                     capitalization === "C",
-
                 targets: validTargets.map(
                     (target) => ({
                         type: target.type,
                         anchorId:
                             target.anchorId,
-                        number:
-                            formatReferenceNumber(
-                                target.number,
+                        displayText:
+                            getReferenceDisplayText(
+                                target,
                             ),
                     }),
                 ),
             });
         },
     );
+}
+
+function getReferenceDisplayText(
+    target: ReferenceTarget,
+): string {
+    if (target.displayText) {
+        return target.displayText;
+    }
+
+    if (target.number) {
+        return formatReferenceNumber(
+            target.number,
+        );
+    }
+
+    /*
+     * This is only a defensive fallback for an invalid target. It
+     * keeps the document renderable without inventing a number.
+     */
+    return target.label;
 }

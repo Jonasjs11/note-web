@@ -10,6 +10,8 @@ import {
 
 import { analyzeTableTargets } from "../references/analyzeTableTargets";
 
+import { analyzeSectionTargets } from "../references/analyzeSectionTargets";
+
 
 const noteFiles = import.meta.glob(
     "../notes/**/*.mdx",
@@ -55,11 +57,23 @@ function createNote(
         ],
     );
 
+    const sectionAnalysis = analyzeSectionTargets(
+        source,
+        filePath,
+        [
+            ...equationAnalysis.targets,
+            ...figureAnalysis.targets,
+            ...tableAnalysis.targets,
+        ],
+    );
+
+
 
     const referenceTargets = [
         ...equationAnalysis.targets,
         ...figureAnalysis.targets,
         ...tableAnalysis.targets,
+        ...sectionAnalysis.targets,
     ];
 
     const transformationResult = transformSource(
@@ -69,6 +83,7 @@ function createNote(
         equationAnalysis.numberedEquations,
         figureAnalysis.numberedFigures,
         tableAnalysis.numberedTables,
+        sectionAnalysis.sections,
     );
 
     if (segments.length < 2) {
@@ -112,6 +127,7 @@ function createNote(
             ...equationAnalysis.diagnostics,
             ...figureAnalysis.diagnostics,
             ...tableAnalysis.diagnostics,
+            ...sectionAnalysis.diagnostics,
             ...transformationResult.diagnostics,
         ],
     };
