@@ -1,9 +1,35 @@
-import { Outlet } from "react-router-dom";
+import {
+    useState,
+} from "react";
 
-import Header from "../components/Header/Header";
-import Sidebar from "../components/Sidebar/Sidebar";
+import {
+    Outlet,
+} from "react-router-dom";
+
+import type {
+    Section,
+} from "../content/references/Section";
+
+import Header
+    from "../components/Header/Header";
+
+import Sidebar
+    from "../components/Sidebar/Sidebar";
+
+import SiteContents
+    from "../components/SiteContents/SiteContents";
+
+export interface LayoutOutletContext {
+    setSiteContentsSections:
+        (sections: Section[]) => void;
+}
 
 export default function Layout() {
+    const [
+        siteContentsSections,
+        setSiteContentsSections,
+    ] = useState<Section[]>([]);
+
     return (
         <div className="layout">
             <Header />
@@ -22,7 +48,11 @@ export default function Layout() {
 
                     <div className="note-content-page">
                         <div className="note-content-page__surface">
-                            <Outlet />
+                            <Outlet
+                                context={{
+                                    setSiteContentsSections,
+                                }}
+                            />
                         </div>
                     </div>
 
@@ -32,18 +62,11 @@ export default function Layout() {
                             note-content-side--right
                         "
                     >
-                        <nav
-                            className="site-contents"
-                            aria-label="Site contents"
-                        >
-                            <div className="site-contents__title">
-                                Site contents
-                            </div>
-
-                            <div className="site-contents__placeholder">
-                                Page sections will appear here.
-                            </div>
-                        </nav>
+                        <SiteContents
+                            sections={
+                                siteContentsSections
+                            }
+                        />
                     </div>
                 </div>
             </main>

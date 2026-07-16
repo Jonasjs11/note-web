@@ -6,12 +6,41 @@ import type { Diagnostic } from "../content/models/Diagnostic";
 
 import MarkdownRenderer from "../components/Markdown/MarkdownView";
 
+import {
+    useEffect,
+} from "react";
+
+import {
+    useOutletContext,
+} from "react-router-dom";
+
+import type {
+    LayoutOutletContext,
+} from "../app/Layout";
+
 export default function Note() {
     const location = useLocation();
 
     const note = notes.find((candidate) => {
         return candidate.url === location.pathname;
     });
+
+    const {
+        setSiteContentsSections,
+    } = useOutletContext<LayoutOutletContext>();
+
+    useEffect(() => {
+        setSiteContentsSections(
+            note?.sections ?? [],
+        );
+
+        return () => {
+            setSiteContentsSections([]);
+        };
+    }, [
+        note?.sections,
+        setSiteContentsSections,
+    ]);
 
     if (!note) {
         return (

@@ -122,6 +122,7 @@ function createNote(
         references: referenceTargets,
 
         numberedFigures: figureAnalysis.numberedFigures,
+        sections: sectionAnalysis.sections,
         diagnostics: [
             ...titleResult.diagnostics,
             ...equationAnalysis.diagnostics,

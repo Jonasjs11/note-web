@@ -3,6 +3,10 @@ import type { Diagnostic } from "./Diagnostic";
 import type { ReferenceTarget } from "../references/ReferenceTarget";
 
 import type {
+    Section,
+} from "../references/Section";
+
+import type {
     NumberedFigure,
 } from "../references/NumberedFigure";
 
@@ -21,5 +25,6 @@ export interface Note {
 
     references: ReferenceTarget[];
     numberedFigures: NumberedFigure[];
+    sections: Section[];
     diagnostics: Diagnostic[];
 }
