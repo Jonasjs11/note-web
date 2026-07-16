@@ -2,6 +2,10 @@ import type {
     SourceReference,
 } from "../sources/SourceReference";
 
+import type {
+    NumberedSubfigure,
+} from "./NumberedSubfigure";
+
 export interface NumberedFigure {
     number: number;
 
@@ -9,11 +13,14 @@ export interface NumberedFigure {
     label?: string;
     width?: string;
 
+    subfigureGap?: string;
+
     sourceReference?: SourceReference;
+
+    subfigures: NumberedSubfigure[];
 
     /*
      * The complete authored figure environment.
-     * This will be useful when we render figures.
      */
     source: string;
 

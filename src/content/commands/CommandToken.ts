@@ -85,6 +85,21 @@ export function createReferenceToken(
     );
 }
 
+export interface FigureSubfigureCommandData {
+    imageUrl?: string;
+    imagePath: string;
+
+    caption?: string;
+    letter: string;
+    anchorId: string;
+
+    width?: string;
+    imageWidth?: string;
+
+    sourceUrl?: string;
+    sourceSiteName?: string;
+}
+
 export interface FigureCommandData {
     imageUrl?: string;
     imagePath: string;
@@ -96,6 +111,9 @@ export interface FigureCommandData {
 
     sourceUrl?: string;
     sourceSiteName?: string;
+
+    subfigures?: FigureSubfigureCommandData[];
+    subfigureGap?: string;
 }
 
 export function createFigureToken(
@@ -112,6 +130,10 @@ export function createFigureToken(
             data.width ?? "",
             data.sourceUrl ?? "",
             data.sourceSiteName ?? "",
+            JSON.stringify(
+                data.subfigures ?? [],
+            ),
+            data.subfigureGap ?? "",
         ],
     );
 }

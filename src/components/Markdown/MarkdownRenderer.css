@@ -1,9 +1,30 @@
+
+/* =========================================================
+   Markdown document layout
+   ========================================================= */
+
 .markdown {
+    /*
+     * Limits the readable line length and centers the document
+     * inside its parent container.
+     */
     max-width: 850px;
     margin: 0 auto;
 
+    /*
+     * Controls the vertical spacing between lines of body text.
+     */
     line-height: 1.7;
+
+    /*
+    *outline: 1px solid red;
+    */
 }
+
+
+/* =========================================================
+   Headings
+   ========================================================= */
 
 .markdown h1,
 .markdown h2,
@@ -11,116 +32,235 @@
 .markdown h4,
 .markdown h5,
 .markdown h6 {
+    /*
+     * Headings use tighter line spacing than normal paragraphs.
+     */
     line-height: 1.25;
 }
 
 .markdown h1 {
+    /*
+     * The page title starts at the top of the document,
+     * so it does not need space above it.
+     */
     margin-top: 0;
     margin-bottom: 1.5rem;
 }
 
 .markdown h2 {
+    /*
+     * Creates a clear separation between major sections.
+     */
     margin-top: 2.5rem;
     margin-bottom: 1rem;
 }
 
 .markdown h3 {
+    /*
+     * Creates a slightly smaller separation between subsections.
+     */
     margin-top: 2rem;
     margin-bottom: 0.75rem;
 }
 
+
+/* =========================================================
+   Paragraphs and lists
+   ========================================================= */
+
 .markdown p {
+    /*
+     * Vertical spacing before and after normal paragraphs.
+     */
     margin: 1rem 0;
 }
 
 .markdown ul,
 .markdown ol {
+    /*
+     * Indents list markers and list contents from the left edge.
+     */
     padding-left: 1.75rem;
 }
 
 .markdown li {
+    /*
+     * Vertical spacing between individual list items.
+     */
     margin: 0.35rem 0;
 }
 
+
+/* =========================================================
+   Blockquotes
+   ========================================================= */
+
 .markdown blockquote {
+    /*
+     * Separates the quote from surrounding content.
+     */
     margin: 1.5rem 0;
+
+    /*
+     * Creates space between the quote text and the accent border.
+     */
     padding-left: 1rem;
 
+    /*
+     * Visual indicator along the left side of the quote.
+     */
     border-left: 4px solid rgba(255, 255, 255, 0.25);
 
+    /*
+     * Makes quoted text slightly less prominent than body text.
+     */
     color: rgba(255, 255, 255, 0.75);
 }
 
+
+/* =========================================================
+   Inline and block code
+   ========================================================= */
+
 .markdown code {
+    /*
+     * Adds a small amount of space around inline code.
+     */
     padding: 0.15rem 0.35rem;
 
     border-radius: 4px;
-
     background: rgba(255, 255, 255, 0.1);
 
+    /*
+     * Uses a fixed-width font for code.
+     */
     font-family: Consolas, "Courier New", monospace;
 }
 
 .markdown pre {
+    /*
+     * Allows long code lines to scroll horizontally instead
+     * of overflowing outside the document.
+     */
     overflow-x: auto;
 
     padding: 1rem;
-
     border-radius: 6px;
-
     background: rgba(0, 0, 0, 0.3);
 }
 
 .markdown pre code {
+    /*
+     * The surrounding <pre> element already supplies padding
+     * and a background, so nested code should not add its own.
+     */
     padding: 0;
-
     background: transparent;
 }
+
+
+/* =========================================================
+   Links
+   ========================================================= */
 
 .markdown a {
     color: #8ab4f8;
 }
 
+
+/* =========================================================
+   Tables
+   ========================================================= */
+
 .markdown table {
+    /*
+     * Makes tables fill the available document width.
+     */
     width: 100%;
 
+    /*
+     * Combines adjacent cell borders into a single border.
+     */
     border-collapse: collapse;
 
+    /*
+     * Separates tables from surrounding text.
+     */
     margin: 1.5rem 0;
 }
 
 .markdown th,
 .markdown td {
+    /*
+     * Controls the space inside each table cell.
+     */
     padding: 0.6rem 0.8rem;
 
     border: 1px solid rgba(255, 255, 255, 0.18);
-
     text-align: left;
 }
 
+
+/* =========================================================
+   Standard Markdown images
+   ========================================================= */
+
 .markdown img {
+    /*
+     * Removes inline-image baseline spacing and allows centering.
+     */
     display: block;
 
+    /*
+     * Prevents images from exceeding the document width while
+     * preserving their original aspect ratio.
+     */
     max-width: 100%;
     height: auto;
 
+    /*
+     * Adds vertical space and centers the image horizontally.
+     */
     margin: 1.5rem auto;
 }
 
+
+/* =========================================================
+   MathJax
+   ========================================================= */
+
 .markdown mjx-container {
+    /*
+     * Prevents MathJax content from forcing the document wider.
+     */
     max-width: 100%;
 }
 
 .markdown mjx-container[display="true"] {
+    /*
+     * Allows wide display equations to scroll horizontally.
+     */
     overflow-x: auto;
     overflow-y: hidden;
 
+    /*
+     * Separates display mathematics from surrounding text.
+     */
     margin: 1.5rem 0;
     padding: 0.25rem 0;
 }
 
+
+/* =========================================================
+   Semantic concept links
+   ========================================================= */
+
 .concept-link {
     color: #8ab4f8;
+
+    /*
+     * A dotted underline distinguishes concepts from normal links.
+     */
     text-decoration: underline;
     text-decoration-style: dotted;
     text-underline-offset: 0.2em;
@@ -130,10 +270,23 @@
     color: white;
 }
 
+
+/* =========================================================
+   Command errors
+   ========================================================= */
+
 .command-error {
+    /*
+     * Makes malformed or unsupported semantic commands visible.
+     */
     color: #ff8a80;
     font-family: Consolas, "Courier New", monospace;
 }
+
+
+/* =========================================================
+   Numbered-reference links
+   ========================================================= */
 
 .reference-link {
     color: #8ab4f8;
@@ -145,53 +298,382 @@
     color: white;
 }
 
+
+/* =========================================================
+   Page navigation
+   ========================================================= */
+
 html {
+    /*
+     * Smoothly scrolls to equation, figure, section and other
+     * reference anchors.
+     */
     scroll-behavior: smooth;
 }
 
+
+/* =========================================================
+   Outer figure
+   ========================================================= */
+
 .note-figure {
-    margin: 2rem auto;
-    max-width: min(100%, 52rem);
+    /*
+     * Makes the figure fill its available content area until it
+     * reaches the maximum figure width.
+     */
+    width: min(100%, 82rem);
+
+    /*
+     * Centers the complete figure box inside its containing block.
+     */
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    margin-inline: auto;
+
+    box-sizing: border-box;
     text-align: center;
+
+    /* DEBUG
+    *outline: 1px solid lime;
+    */
 }
 
+
+/* =========================================================
+   Figure images
+   ========================================================= */
+
 .note-figure__image {
+    /*
+     * Allows the image to be centered using automatic margins.
+     */
     display: block;
 
+    /*
+     * Keeps the image inside its container and preserves its
+     * original aspect ratio.
+     */
     max-width: 100%;
     height: auto;
+
+    /*
+     * Centers the image horizontally.
+     */
     margin: 0 auto;
 
     border-radius: 0.5rem;
 }
 
+
+/* =========================================================
+   Overall figure caption
+   ========================================================= */
+
 .note-figure__caption {
+    /*
+     * Vertical distance between a normal figure image and its
+     * overall caption.
+     */
     margin-top: 0.75rem;
+
+    /*
+     * Controls spacing between lines in a multiline caption.
+     */
     line-height: 1.5;
 }
 
 .note-figure__number {
+    /*
+     * Makes the "Figure X." prefix more prominent.
+     */
     font-weight: 600;
 }
 
+
+/* =========================================================
+   Figure loading errors
+   ========================================================= */
+
 .note-figure__error {
+    /*
+     * Ensures padding and borders are included in the element's
+     * calculated width.
+     */
     box-sizing: border-box;
 
     padding: 1rem;
     border: 1px solid currentColor;
     border-radius: 0.5rem;
 
+    /*
+     * Makes the error visible without overpowering the page.
+     */
     opacity: 0.8;
 }
 
+
+/* =========================================================
+   Overall figure source
+   ========================================================= */
+
 .note-figure__source {
+    /*
+     * Vertical distance between the overall figure caption
+     * and the overall figure source.
+     */
     margin-top: 0.35rem;
+
+    /*
+     * Sources are intentionally smaller and less prominent than
+     * the main caption.
+     */
     font-size: 0.875em;
     opacity: 0.75;
 }
 
 .note-figure__source a {
+    /*
+     * Inherits the subdued source color rather than the standard
+     * document-link color.
+     */
+    color: inherit;
+
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+
+/* =========================================================
+   Subfigure group
+   ========================================================= */
+
+.note-figure__subfigures {
+    /*
+     * Places the subfigures in columns defined by the renderer.
+     */
+    display: grid;
+
+    /*
+     * Allows subfigures of different content lengths to share
+     * aligned image, caption and source rows.
+     */
+    align-items: stretch;
+
+    width: 100%;
+
+    /*
+     * Vertical distance between the subfigure captions and the
+     * overall figure caption when no subfigure sources exist.
+     */
+    margin-bottom: 0.35rem;
+
+    /*
+     * Default horizontal distance between adjacent subfigures.
+     * This may be overridden by an authored \subfiguregap value.
+     */
+    column-gap: 1rem;
+
+    /*
+     * Internal vertical spacing is controlled by the caption and
+     * source margins rather than one shared grid gap.
+     */
+    row-gap: 0;
+
+     /*
+     * Centers the complete row of subfigure columns when their
+     * combined authored widths do not fill the available space.
+     */
+    justify-content: center;
+
+    /*
+    *outline: 1px solid cyan;
+    */
+}
+
+.note-figure__subfigures--with-sources {
+    /*
+     * Vertical distance between the subfigure source row and the
+     * overall figure caption.
+     *
+     * This is larger than the no-source distance so the source
+     * information remains visually associated with its subfigure.
+     */
+    margin-bottom: 1rem;
+}
+
+
+/* =========================================================
+   Individual subfigure layout
+   ========================================================= */
+
+.note-subfigure {
+    /*
+     * Each subfigure participates in the parent grid and normally
+     * occupies two shared rows:
+     *
+     * 1. Image
+     * 2. Caption
+     */
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+
+    /*
+     * Allows wide content to shrink inside its grid column instead
+     * of forcing the whole figure wider.
+     */
+    min-width: 0;
+
+    text-align: center;
+}
+
+.note-subfigure--with-source-row {
+    /*
+     * Subfigures use a third shared row when at least one
+     * subfigure in the group contains a source:
+     *
+     * 1. Image
+     * 2. Caption
+     * 3. Source
+     */
+    grid-row: span 3;
+}
+
+
+/* =========================================================
+   Subfigure image area
+   ========================================================= */
+
+.note-subfigure__media {
+    /*
+     * Aligns the bottoms of images with different heights.
+     */
+    display: flex;
+    align-items: flex-end;
+
+    /*
+     * Centers the image horizontally inside the subfigure.
+     */
+    justify-content: center;
+
+    min-width: 0;
+}
+
+.note-subfigure .note-figure__image {
+    display: block;
+    max-width: 100%;
+    margin-inline: auto;
+}
+
+
+/* =========================================================
+   Subfigure caption
+   ========================================================= */
+
+.note-subfigure__caption {
+    /*
+     * Vertical distance between the subfigure image and its caption.
+     */
+    margin-top: 0.45rem;
+}
+
+.note-subfigure__letter {
+    /*
+     * Makes the "(a)", "(b)", and similar prefixes more prominent.
+     */
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   Subfigure source
+   ========================================================= */
+
+.note-subfigure__source {
+    /*
+     * Keeps source rows aligned when some subfigures have no source.
+     */
+    min-height: 1.2em;
+
+    /*
+     * Vertical distance between the subfigure caption and source.
+     * This matches the overall caption-to-source spacing.
+     */
+    margin-top: 0.35rem;
+
+    /*
+     * Subfigure sources are slightly smaller than overall sources.
+     */
+    font-size: 0.825em;
+    opacity: 0.75;
+}
+
+.note-subfigure__source a {
     color: inherit;
     text-decoration: underline;
     text-underline-offset: 0.15em;
+}
+
+
+/* =========================================================
+   Overall caption following a subfigure group
+   ========================================================= */
+
+.note-figure__subfigures + figcaption {
+    /*
+     * The subfigure container already controls the distance before
+     * the overall caption, so the caption adds no additional margin.
+     */
+    margin-top: 0;
+}
+
+
+/* =========================================================
+   Browsers without CSS subgrid support
+   ========================================================= */
+
+@supports not (grid-template-rows: subgrid) {
+    .note-subfigure {
+        /*
+         * Falls back to independent image and caption rows.
+         * Cross-subfigure alignment may be less precise.
+         */
+        grid-template-rows: auto auto;
+    }
+
+    .note-subfigure--with-source-row {
+        /*
+         * Adds the source row to the fallback layout.
+         */
+        grid-template-rows: auto auto auto;
+    }
+}
+
+
+/* =========================================================
+   Narrow-screen subfigure layout
+   ========================================================= */
+
+@media (max-width: 700px) {
+    .note-figure__subfigures {
+        /*
+         * Stacks every subfigure vertically on narrow screens.
+         * !important is required because the renderer may supply
+         * an inline grid-template-columns value.
+         */
+        grid-template-columns: minmax(0, 1fr) !important;
+
+        /*
+         * Horizontal spacing is unnecessary when only one column
+         * is displayed.
+         */
+        column-gap: 0 !important;
+    }
+
+    .note-subfigure:not(:last-child) {
+        /*
+         * Vertical distance between stacked subfigures.
+         */
+        margin-bottom: 1.25rem;
+    }
 }

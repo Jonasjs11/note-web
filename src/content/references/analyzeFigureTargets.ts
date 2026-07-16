@@ -19,6 +19,11 @@ import type {
 } from "./NumberedFigure";
 
 import type {
+    NumberedSubfigure,
+} from "./NumberedSubfigure";
+
+import type {
+    ReferenceNumber,
     ReferenceTarget,
 } from "./ReferenceTarget";
 
@@ -33,6 +38,22 @@ import type {
 import {
     isWebUrl,
 } from "../sources/isWebUrl";
+
+import {
+    findSubfigureEnvironments,
+} from "../figures/findSubfigureEnvironments";
+
+import {
+    normalizeFigureWidth,
+} from "../figures/normalizeFigureWidth";
+
+import {
+    maskSourceRanges,
+} from "../parser/maskSourceRanges";
+
+type FigureSubject =
+    | "figure"
+    | "subfigure";
 
 export function analyzeFigureTargets(
     source: string,
@@ -92,43 +113,115 @@ export function analyzeFigureTargets(
             figureStart +
             contentOffset;
 
+        const subfigureEnvironments =
+            findSubfigureEnvironments(
+                figureContent,
+            );
+
+        /*
+         * Outer figure commands must not see captions,
+         * labels or sources belonging to subfigures.
+         * Masking preserves all original offsets.
+         */
+        const outerFigureContent =
+            maskSourceRanges(
+                figureContent,
+                subfigureEnvironments,
+            );
+
         const caption = analyzeCaption(
             source,
             filePath,
-            figureContent,
+            outerFigureContent,
             contentStart,
             diagnostics,
+            "figure",
+            true,
         );
 
-        const sourceReference = analyzeFigureSource(
-            source,
-            filePath,
-            figureContent,
-            contentStart,
-            diagnostics,
-        );
+        const sourceReference =
+            analyzeFigureSource(
+                source,
+                filePath,
+                outerFigureContent,
+                contentStart,
+                diagnostics,
+                "figure",
+            );
 
         const label = analyzeFigureLabel(
             source,
             filePath,
-            figureContent,
+            outerFigureContent,
             contentStart,
-            figureNumber,
+            {
+                primary: figureNumber,
+            },
             targetsByLabel,
             targets,
             diagnostics,
+            "figure",
         );
 
         const width = extractFigureWidth(
-            figureContent,
+            outerFigureContent,
         );
+
+        const subfigureGap =
+            analyzeSubfigureGap(
+                source,
+                filePath,
+                outerFigureContent,
+                contentStart,
+                diagnostics,
+            );
+
+        const subfigures =
+            analyzeSubfigures(
+                source,
+                filePath,
+                contentStart,
+                figureNumber,
+                label,
+                subfigureEnvironments,
+                targetsByLabel,
+                targets,
+                diagnostics,
+            );
+
+        const childLabels = subfigures
+            .map(
+                (subfigure) =>
+                    subfigure.label,
+            )
+            .filter(
+                (
+                    childLabel,
+                ): childLabel is string =>
+                    childLabel !== undefined,
+            );
+
+        if (
+            label &&
+            childLabels.length > 0
+        ) {
+            const parentTarget =
+                targetsByLabel.get(label);
+
+            if (parentTarget) {
+                parentTarget.childLabels =
+                    childLabels;
+            }
+        }
 
         numberedFigures.push({
             number: figureNumber,
             caption,
             label,
             width,
+            subfigureGap,
             sourceReference,
+            subfigures,
 
             source:
                 completeFigure,
@@ -148,12 +241,224 @@ export function analyzeFigureTargets(
     };
 }
 
+function analyzeSubfigureGap(
+    completeSource: string,
+    filePath: string,
+    figureContent: string,
+    figureContentStart: number,
+    diagnostics: Diagnostic[],
+): string | undefined {
+    const gapMatches =
+        findLatexCommands(
+            figureContent,
+            "subfiguregap",
+        );
+
+    if (gapMatches.length === 0) {
+        return undefined;
+    }
+
+    if (gapMatches.length > 1) {
+        for (
+            const extraGap of
+                gapMatches.slice(1)
+        ) {
+            diagnostics.push({
+                severity: "error",
+                message:
+                    "A figure may only declare one subfigure gap.",
+                filePath,
+                location: getSourceLocation(
+                    completeSource,
+                    figureContentStart +
+                        extraGap.startOffset,
+                ),
+            });
+        }
+    }
+
+    const firstGap = gapMatches[0];
+    const authoredGap =
+        firstGap.value.trim();
+
+    if (!authoredGap) {
+        diagnostics.push({
+            severity: "warning",
+            message:
+                "The subfigure gap is empty.",
+            filePath,
+            location: getSourceLocation(
+                completeSource,
+                figureContentStart +
+                    firstGap.startOffset,
+            ),
+        });
+
+        return undefined;
+    }
+
+    if (authoredGap === "0") {
+        return "0";
+    }
+
+    const normalizedGap =
+        normalizeFigureWidth(
+            authoredGap,
+        );
+
+    if (!normalizedGap) {
+        diagnostics.push({
+            severity: "warning",
+            message:
+                `Unsupported subfigure gap ` +
+                `"${authoredGap}".`,
+            filePath,
+            location: getSourceLocation(
+                completeSource,
+                figureContentStart +
+                    firstGap.startOffset,
+            ),
+        });
+
+        return undefined;
+    }
+
+    return normalizedGap;
+}
+
+function analyzeSubfigures(
+    completeSource: string,
+    filePath: string,
+    figureContentStart: number,
+    figureNumber: number,
+    parentLabel: string | undefined,
+    environments: ReturnType<
+        typeof findSubfigureEnvironments
+    >,
+    targetsByLabel: Map<
+        string,
+        ReferenceTarget
+    >,
+    targets: ReferenceTarget[],
+    diagnostics: Diagnostic[],
+): NumberedSubfigure[] {
+    return environments.map(
+        (environment, index) => {
+            const letter =
+                createSubfigureLetter(index);
+
+            const contentStart =
+                figureContentStart +
+                environment.contentStartOffset;
+
+            const caption = analyzeCaption(
+                completeSource,
+                filePath,
+                environment.content,
+                contentStart,
+                diagnostics,
+                "subfigure",
+                false,
+            );
+
+            const sourceReference =
+                analyzeFigureSource(
+                    completeSource,
+                    filePath,
+                    environment.content,
+                    contentStart,
+                    diagnostics,
+                    "subfigure",
+                );
+
+            const label =
+                analyzeFigureLabel(
+                    completeSource,
+                    filePath,
+                    environment.content,
+                    contentStart,
+                    {
+                        primary:
+                            figureNumber,
+                        sub:
+                            letter,
+                    },
+                    targetsByLabel,
+                    targets,
+                    diagnostics,
+                    "subfigure",
+                    parentLabel,
+                );
+
+            const authoredWidth =
+                environment.authoredWidth.trim();
+
+            const width =
+                normalizeFigureWidth(
+                    authoredWidth,
+                );
+
+            if (!authoredWidth) {
+                diagnostics.push({
+                    severity: "warning",
+                    message:
+                        "A subfigure should declare a width.",
+                    filePath,
+                    location: getSourceLocation(
+                        completeSource,
+                        figureContentStart +
+                            environment.startOffset,
+                    ),
+                });
+            } else if (!width) {
+                diagnostics.push({
+                    severity: "warning",
+                    message:
+                        `Unsupported subfigure width ` +
+                        `"${authoredWidth}".`,
+                    filePath,
+                    location: getSourceLocation(
+                        completeSource,
+                        figureContentStart +
+                            environment.startOffset,
+                    ),
+                });
+            }
+
+            return {
+                letter,
+                caption,
+                label,
+                width,
+                imageWidth:
+                    extractFigureWidth(
+                        environment.content,
+                    ),
+                sourceReference,
+
+                source:
+                    environment.source,
+
+                startOffset:
+                    figureContentStart +
+                    environment.startOffset,
+
+                endOffset:
+                    figureContentStart +
+                    environment.endOffset,
+            };
+        },
+    );
+}
+
 function analyzeCaption(
     completeSource: string,
     filePath: string,
     figureContent: string,
     figureContentStart: number,
     diagnostics: Diagnostic[],
+    subject: FigureSubject,
+    required: boolean,
 ): string | undefined {
     const captionMatches =
         findLatexCommands(
@@ -162,16 +467,18 @@ function analyzeCaption(
         );
 
     if (captionMatches.length === 0) {
-        diagnostics.push({
-            severity: "warning",
-            message:
-                "A numbered figure should have a caption.",
-            filePath,
-            location: getSourceLocation(
-                completeSource,
-                figureContentStart,
-            ),
-        });
+        if (required) {
+            diagnostics.push({
+                severity: "warning",
+                message:
+                    "A numbered figure should have a caption.",
+                filePath,
+                location: getSourceLocation(
+                    completeSource,
+                    figureContentStart,
+                ),
+            });
+        }
 
         return undefined;
     }
@@ -184,12 +491,12 @@ function analyzeCaption(
             diagnostics.push({
                 severity: "error",
                 message:
-                    "A figure may only have one caption.",
+                    `A ${subject} may only have one caption.`,
                 filePath,
                 location: getSourceLocation(
                     completeSource,
                     figureContentStart +
-                        (extraCaption.startOffset),
+                        extraCaption.startOffset,
                 ),
             });
         }
@@ -205,12 +512,12 @@ function analyzeCaption(
         diagnostics.push({
             severity: "warning",
             message:
-                "The figure caption is empty.",
+                `The ${subject} caption is empty.`,
             filePath,
             location: getSourceLocation(
                 completeSource,
                 figureContentStart +
-                    (firstCaption.startOffset ?? 0),
+                    firstCaption.startOffset,
             ),
         });
 
@@ -226,6 +533,7 @@ function analyzeFigureSource(
     figureContent: string,
     figureContentStart: number,
     diagnostics: Diagnostic[],
+    subject: FigureSubject,
 ): SourceReference | undefined {
     const sourceMatches =
         findLatexCommands(
@@ -240,12 +548,12 @@ function analyzeFigureSource(
     if (sourceMatches.length > 1) {
         for (
             const extraSource of
-            sourceMatches.slice(1)
+                sourceMatches.slice(1)
         ) {
             diagnostics.push({
                 severity: "error",
                 message:
-                    "A figure may only have one source.",
+                    `A ${subject} may only have one source.`,
                 filePath,
                 location: getSourceLocation(
                     completeSource,
@@ -270,7 +578,7 @@ function analyzeFigureSource(
         diagnostics.push({
             severity: "error",
             message:
-                "A figure source URL cannot be empty.",
+                `A ${subject} source URL cannot be empty.`,
             filePath,
             location: getSourceLocation(
                 completeSource,
@@ -285,7 +593,7 @@ function analyzeFigureSource(
         diagnostics.push({
             severity: "error",
             message:
-                "A figure source must be an absolute " +
+                `A ${subject} source must be an absolute ` +
                 "HTTP or HTTPS URL.",
             filePath,
             location: getSourceLocation(
@@ -356,13 +664,15 @@ function analyzeFigureLabel(
     filePath: string,
     figureContent: string,
     figureContentStart: number,
-    figureNumber: number,
+    number: ReferenceNumber,
     targetsByLabel: Map<
         string,
         ReferenceTarget
     >,
     targets: ReferenceTarget[],
     diagnostics: Diagnostic[],
+    subject: FigureSubject,
+    parentLabel?: string,
 ): string | undefined {
     const labelMatches =
         findLatexCommands(
@@ -382,17 +692,17 @@ function analyzeFigureLabel(
             diagnostics.push({
                 severity: "error",
                 message:
-                    "A figure may only have one label.",
+                    `A ${subject} may only have one label.`,
                 filePath,
                 location: getSourceLocation(
                     completeSource,
                     figureContentStart +
-                        (extraLabel.startOffset),
+                        extraLabel.startOffset,
                 ),
             });
         }
     }
-    
+
     const firstLabel =
         labelMatches[0];
 
@@ -401,13 +711,13 @@ function analyzeFigureLabel(
 
     const labelIndex =
         figureContentStart +
-        (firstLabel.startOffset ?? 0);
+        firstLabel.startOffset;
 
     if (!label) {
         diagnostics.push({
             severity: "error",
             message:
-                "A figure label cannot be empty.",
+                `A ${subject} label cannot be empty.`,
             filePath,
             location: getSourceLocation(
                 completeSource,
@@ -419,10 +729,15 @@ function analyzeFigureLabel(
     }
 
     if (!label.startsWith("fig:")) {
+        const subjectName =
+            subject === "figure"
+                ? "Figure"
+                : "Subfigure";
+
         diagnostics.push({
             severity: "warning",
             message:
-                `Figure label "${label}" ` +
+                `${subjectName} label "${label}" ` +
                 `should begin with "fig:".`,
             filePath,
             location: getSourceLocation(
@@ -450,13 +765,10 @@ function analyzeFigureLabel(
     const target: ReferenceTarget = {
         label,
         type: "figure",
-
-        number: {
-            primary: figureNumber,
-        },
-
+        number,
         anchorId:
             createReferenceAnchor(label),
+        parentLabel,
     };
 
     targetsByLabel.set(label, target);
@@ -497,37 +809,27 @@ function extractFigureWidth(
     );
 }
 
-function normalizeFigureWidth(
-    width: string,
-): string | undefined {
-    const textWidthMatch =
-        width.match(
-            /^(\d*\.?\d+)\\textwidth$/,
+function createSubfigureLetter(
+    index: number,
+): string {
+    let remaining = index + 1;
+    let result = "";
+
+    while (remaining > 0) {
+        remaining--;
+
+        result =
+            String.fromCharCode(
+                97 +
+                (remaining % 26),
+            ) + result;
+
+        remaining = Math.floor(
+            remaining / 26,
         );
-
-    if (textWidthMatch) {
-        const fraction =
-            Number(textWidthMatch[1]);
-
-        if (
-            Number.isFinite(fraction) &&
-            fraction > 0
-        ) {
-            return `${fraction * 100}%`;
-        }
-
-        return undefined;
     }
 
-    if (
-        /^\d*\.?\d+(%|px|rem|em|vw)$/.test(
-            width,
-        )
-    ) {
-        return width;
-    }
-
-    return undefined;
+    return result;
 }
 
 type OptionalSquareArgument =

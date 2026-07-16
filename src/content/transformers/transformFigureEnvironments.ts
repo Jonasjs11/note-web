@@ -6,6 +6,10 @@ import {
     createFigureToken,
 } from "../commands/CommandToken";
 
+import type {
+    FigureSubfigureCommandData,
+} from "../commands/CommandToken";
+
 import {
     createReferenceAnchor,
 } from "../references/createReferenceAnchor";
@@ -29,6 +33,18 @@ import {
 import {
     isWebUrl,
 } from "../sources/isWebUrl";
+
+import {
+    findSubfigureEnvironments,
+} from "../figures/findSubfigureEnvironments";
+
+import {
+    maskSourceRanges,
+} from "../parser/maskSourceRanges";
+
+import type {
+    NumberedFigure,
+} from "../references/NumberedFigure";
 
 export function transformFigureEnvironments(
     source: string,
@@ -84,11 +100,6 @@ function transformFiguresInText(
                 ];
 
             if (!numberedFigure) {
-                /*
-                 * Remove the unsupported raw environment
-                 * even if analysis and transformation have
-                 * become unsynchronised.
-                 */
                 return createFigureToken({
                     imagePath: "",
                     caption:
@@ -99,18 +110,28 @@ function transformFiguresInText(
                 });
             }
 
-            const imagePath =
-                extractImagePath(
+            const subfigureEnvironments =
+                findSubfigureEnvironments(
                     figureContent,
                 );
 
-            const imageUrl = imagePath
-                ? isWebUrl(imagePath)
-                    ? imagePath
-                    : findFigureAsset(
-                        imagePath,
-                    )
-                : undefined;
+            const outerFigureContent =
+                maskSourceRanges(
+                    figureContent,
+                    subfigureEnvironments,
+                );
+
+            const hasSubfigures =
+                numberedFigure.subfigures.length > 0;
+
+            const imagePath = hasSubfigures
+                ? undefined
+                : extractImagePath(
+                      outerFigureContent,
+                  );
+
+            const imageUrl =
+                resolveImageUrl(imagePath);
 
             const anchorId =
                 numberedFigure.label
@@ -120,8 +141,17 @@ function transformFiguresInText(
                     : `figure-${numberedFigure.number}`;
 
             const transformedCaption =
-                extractCaption(figureContent) ??
+                extractCaption(
+                    outerFigureContent,
+                ) ??
                 numberedFigure.caption;
+
+            const subfigures =
+                buildSubfigureCommandData(
+                    numberedFigure,
+                    subfigureEnvironments,
+                    anchorId,
+                );
 
             return (
                 "\n\n" +
@@ -134,16 +164,20 @@ function transformFiguresInText(
                     number:
                         numberedFigure.number.toString(),
                     anchorId,
-                    width: numberedFigure.width,
+                    width:
+                        numberedFigure.width,
                     sourceUrl:
                         numberedFigure
                             .sourceReference
                             ?.url,
-
                     sourceSiteName:
                         numberedFigure
                             .sourceReference
                             ?.siteName,
+                    subfigures,
+                    subfigureGap:
+                        numberedFigure
+                            .subfigureGap,
                 }) +
                 "\n\n"
             );
@@ -153,6 +187,83 @@ function transformFiguresInText(
     updateFigureIndex(figureIndex);
 
     return transformed;
+}
+
+function buildSubfigureCommandData(
+    numberedFigure: NumberedFigure,
+    environments: ReturnType<
+        typeof findSubfigureEnvironments
+    >,
+    figureAnchorId: string,
+): FigureSubfigureCommandData[] {
+    return environments.map(
+        (environment, index) => {
+            const numberedSubfigure =
+                numberedFigure.subfigures[
+                    index
+                ];
+
+            const letter =
+                numberedSubfigure?.letter ??
+                `${index + 1}`;
+
+            const imagePath =
+                extractImagePath(
+                    environment.content,
+                );
+
+            const anchorId =
+                numberedSubfigure?.label
+                    ? createReferenceAnchor(
+                          numberedSubfigure.label,
+                      )
+                    : `${figureAnchorId}-${letter}`;
+
+            return {
+                imageUrl:
+                    resolveImageUrl(
+                        imagePath,
+                    ),
+                imagePath:
+                    imagePath ?? "",
+                caption:
+                    extractCaption(
+                        environment.content,
+                    ) ??
+                    numberedSubfigure
+                        ?.caption,
+                letter,
+                anchorId,
+                width:
+                    numberedSubfigure
+                        ?.width,
+                imageWidth:
+                    numberedSubfigure
+                        ?.imageWidth ??
+                    "100%",
+                sourceUrl:
+                    numberedSubfigure
+                        ?.sourceReference
+                        ?.url,
+                sourceSiteName:
+                    numberedSubfigure
+                        ?.sourceReference
+                        ?.siteName,
+            };
+        },
+    );
+}
+
+function resolveImageUrl(
+    imagePath: string | undefined,
+): string | undefined {
+    if (!imagePath) {
+        return undefined;
+    }
+
+    return isWebUrl(imagePath)
+        ? imagePath
+        : findFigureAsset(imagePath);
 }
 
 function extractImagePath(
