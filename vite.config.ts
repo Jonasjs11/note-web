@@ -7,4 +7,16 @@ export default defineConfig({
     ],
 
     base: "/note-web/",
+
+    resolve: {
+        dedupe: [
+            "react",
+            "react-dom",
+        ],
+    },
+
+    build: {
+        sourcemap: true,
+        minify: false,
+    },
 });

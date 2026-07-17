@@ -40,22 +40,19 @@ interface MarkdownViewProps {
     components?: Components;
 }
 
-const rootRef =
-    useRef<HTMLElement | null>(null);
-
-function setRootRef(
-    element: HTMLElement | null,
-): void {
-    rootRef.current = element;
-}
 export default function MarkdownView({
     source,
     className,
     rootElement = "article",
     components,
 }: MarkdownViewProps) {
-    const rootRef =
-        useRef<HTMLElement>(null);
+    const rootRef = useRef<HTMLElement | null>(null);
+
+    function setRootRef(
+        element: HTMLElement | null,
+    ): void {
+        rootRef.current = element;
+    }
 
     /*
      * ElementType allows the chosen HTML tag to be
