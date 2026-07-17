@@ -519,13 +519,43 @@
         display: none;
     }
 
+    .note-search__panel {
+        position: fixed;
+
+        top:
+            calc(
+                var(--header-height) +
+                0.5rem
+            );
+
+        right: 0.75rem;
+        left: 0.75rem;
+
+        width: auto;
+        max-height:
+            calc(
+                100dvh -
+                var(--header-height) -
+                1.25rem
+            );
+    }
+
+    .note-search__results {
+        max-height:
+            calc(
+                100dvh -
+                var(--header-height) -
+                6rem
+            );
+    }
+
     .app-header__actions {
         grid-column: 2;
         grid-row: 1;
 
         justify-content: flex-end;
 
-        overflow: hidden;
+        overflow: visible;
         padding-right: 0.55rem;
         padding-left: 0.4rem;
     }

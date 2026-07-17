@@ -152,19 +152,31 @@
         overflow-x: hidden;
         overflow-y: auto;
 
-        border-right: 1px solid var(--border-subtle);
-        box-shadow:
-            0.8rem 0 2.2rem
-            rgba(0, 0, 0, 0.38);
+        border-right:
+            1px solid
+            var(--border-subtle);
 
         transform: translateX(-100%);
+        visibility: hidden;
+        pointer-events: none;
 
         transition:
-            transform 180ms ease;
+            transform 180ms ease,
+            visibility 0s linear 180ms;
     }
 
     .layout--sidebar-open .sidebar {
         transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+
+        box-shadow:
+            0.8rem 0 2.2rem
+            rgba(0, 0, 0, 0.38);
+
+        transition:
+            transform 180ms ease,
+            visibility 0s linear 0s;
     }
 }
 
