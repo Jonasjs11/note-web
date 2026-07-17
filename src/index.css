@@ -26,8 +26,6 @@
 
     --sidebar-background: #202126;
     --workspace-background: #191a1e;
-    --workspace-side-left: #1b1c21;
-    --workspace-side-right: #18191d;
     --page-background: #23252b;
     --page-border: rgba(255, 255, 255, 0.055);
     --page-shadow:
@@ -104,8 +102,6 @@
 
     --sidebar-background: #f4f6f9;
     --workspace-background: #e6eaf0;
-    --workspace-side-left: #e3e7ed;
-    --workspace-side-right: #dde2e9;
     --page-background: #ffffff;
     --page-border: rgba(34, 47, 66, 0.11);
     --page-shadow:
@@ -258,11 +254,11 @@ select {
 }
 
 .note-content-side--left {
-    background: var(--workspace-side-left);
+    background: var(--workspace-background);
 }
 
 .note-content-side--right {
-    background: var(--workspace-side-right);
+    background: var(--workspace-background);
 }
 
 .note-content-page {

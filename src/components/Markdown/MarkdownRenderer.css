@@ -826,3 +826,40 @@ html {
     text-decoration-thickness: 0.08em;
     text-underline-offset: 0.15em;
 }
+
+
+/* =========================================================
+   Theme-aware SVG illustrations
+   ========================================================= */
+
+/* SVG inversion in rendered pages and concept tooltips */
+html[data-theme="dark"]
+.note-content-page__surface
+img[src*=".svg"],
+html[data-theme="dark"]
+.note-content-page__surface
+img[src*="image/svg+xml"],
+html[data-theme="dark"]
+.concept-tooltip
+img[src*=".svg"],
+html[data-theme="dark"]
+.concept-tooltip
+img[src*="image/svg+xml"] {
+    filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Restore original appearance in light mode */
+html[data-theme="light"]
+.note-content-page__surface
+img[src*=".svg"],
+html[data-theme="light"]
+.note-content-page__surface
+img[src*="image/svg+xml"],
+html[data-theme="light"]
+.concept-tooltip
+img[src*=".svg"],
+html[data-theme="light"]
+.concept-tooltip
+img[src*="image/svg+xml"] {
+    filter: none !important;
+}

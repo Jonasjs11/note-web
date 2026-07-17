@@ -30,7 +30,7 @@ Newton's second law states that the net force acting on an object equals its mas
 
     ],
 
-    illustration: "/illustrations/TreTrinsReglen.svg",
+    illustration: "../src/content/assets/TreTrinsReglen.svg",
 };
 
 export default force;

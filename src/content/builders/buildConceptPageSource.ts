@@ -26,7 +26,7 @@ interface ConceptPageLabels {
 const labels:
     Record<ContentLanguage, ConceptPageLabels> = {
         en: {
-            shortDefinition: "Short definition",
+            shortDefinition: "Definition",
             notation: "Notation",
             illustration: "Illustration",
             formalDefinition: "Formal definition",
@@ -37,7 +37,7 @@ const labels:
         },
 
         da: {
-            shortDefinition: "Kort definition",
+            shortDefinition: "Definition",
             notation: "Notation",
             illustration: "Illustration",
             formalDefinition: "Formel definition",

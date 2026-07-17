@@ -53,7 +53,7 @@ const subjectPresentationRegistry:
             },
             color: "#70d684",
             icon: "subject",
-            order: 20,
+            order: 30,
         },
     };
 

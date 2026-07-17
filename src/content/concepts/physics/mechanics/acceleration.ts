@@ -1,32 +1,31 @@
-import type { Concept } from "../../../models/Concept";
+import { defineConcept } from "../../../models/Concept";
 
-const force: Concept = {
+export default defineConcept({
     id: "acceleration",
-    title: "Acceleration",
 
-    aliases: [
-        "accelerations",
-    ],
+    translations: {
+        en: {
+            title: "Acceleration",
+            aliases: [
+                "accelerations",
+            ],
+            shortDefinition: "The amount the velocity (speed) of a body changes.",
+            notation: String.raw`$\vec{a}$`,
+            formalDefinition: String.raw`$\vec{a} = \frac{\mathrm{d}^2\vec{r}}{\mathrm{d}t^2}$`,
+        },
 
-    shortDefinition: String.raw`
-A **acceleration** is...
-`,
+        da: {
+            title: "Acceleration",
+            aliases: [
+                "accelerationer",
+            ],
+            shortDefinition: "Mængden hastigheden (farten) af et legeme ændres.",
+            notation: String.raw`$\vec{a}$`,
+            formalDefinition: String.raw`$\vec{a} = \frac{\mathrm{d}^2\vec{r}}{\mathrm{d}t^2}$`,
+        },
+    },
 
-    notation: String.raw`
-\[
-\vec{a}
-\]
-`,
-
-    formalDefinition: String.raw`
-Newton's second law states that the net force acting on an object equals its mass multiplied by its acceleration.
-
-\[
-\vec{v} = \frac{\mathrm{d}^2\vec{r}}{\mathrm{d}t^2}
-\]
-
-The SI unit of force is the **newton**, written as $\mathrm{N}$.
-`,
+    illustration: "../src/content/assets/physics/force.svg",
 
     prerequisites: [
         "derivative",
@@ -34,8 +33,4 @@ The SI unit of force is the **newton**, written as $\mathrm{N}$.
         "velocity",
         "vector",
     ],
-
-    illustration: "/illustrations/force.svg",
-};
-
-export default force;
+});
