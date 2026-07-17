@@ -212,3 +212,106 @@
         animation-iteration-count: 1 !important;
     }
 }
+
+.simulation-functions {
+    display: grid;
+    gap: 0.65rem;
+    padding: 0.9rem 1.1rem 0;
+}
+
+.simulation-function {
+    min-width: 0;
+}
+
+.simulation-function__input-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: stretch;
+
+    min-width: 0;
+    overflow: hidden;
+
+    background: var(--simulation-background);
+    border: 1px solid var(--simulation-border);
+    border-radius: 0.8rem;
+}
+
+.simulation-function__name {
+    display: flex;
+    align-items: center;
+    padding: 0.65rem 0.75rem;
+
+    color: var(--simulation-foreground);
+    background: var(--simulation-control);
+    border-right: 1px solid var(--simulation-border);
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.simulation-function input {
+    min-width: 0;
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+
+    color: var(--simulation-foreground);
+    background: var(--simulation-background);
+    background: color-mix(
+        in srgb,
+        var(--simulation-background) 78%,
+        var(--simulation-control)
+    );
+    border: 0;
+    outline-offset: -2px;
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+    font-size: 0.95rem;
+}
+
+.simulation-function input::placeholder {
+    color: var(--simulation-muted);
+}
+
+.simulation-function input[aria-invalid="true"] {
+    box-shadow:
+        inset 0 0 0 1px
+        var(--simulation-danger);
+}
+
+.simulation-function__description,
+.simulation-function__error {
+    margin-top: 0.35rem;
+    padding-inline: 0.15rem;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.simulation-function__description {
+    color: var(--simulation-muted);
+}
+
+.simulation-function__error {
+    color: var(--simulation-danger);
+}
+
+@media (max-width: 34rem) {
+    .simulation-function__input-row {
+        grid-template-columns: 1fr;
+    }
+
+    .simulation-function__name {
+        border-right: 0;
+        border-bottom:
+            1px solid
+            var(--simulation-border);
+    }
+}

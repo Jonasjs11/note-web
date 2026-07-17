@@ -2,6 +2,7 @@ import {
     useCallback,
     useEffect,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
 } from "react";
@@ -26,6 +27,18 @@ import type {
 import {
     createDefaultParameterValues,
 } from "./parameterDefinitions";
+
+import {
+    compileSimulationFunctions,
+    createDefaultFunctionExpressions,
+} from "./functionDefinitions";
+
+import type {
+    RuntimeSimulationFunctions,
+} from "./functionDefinitions";
+
+import FunctionInputs
+    from "./FunctionInputs";
 
 import {
     readSimulationPalette,
@@ -72,6 +85,9 @@ export default function SimulationPlayer({
     const parametersRef =
         useRef<RuntimeParameterValues>({});
 
+    const functionsRef =
+        useRef<RuntimeSimulationFunctions>({});
+
     const elapsedTimeRef =
         useRef(0);
 
@@ -88,6 +104,9 @@ export default function SimulationPlayer({
 
     const [parameters, setParameters] =
         useState<RuntimeParameterValues>({});
+
+    const [functionExpressions, setFunctionExpressions] =
+        useState<Record<string, string>>({});
 
     const [isPlaying, setIsPlaying] =
         useState(false);
@@ -108,12 +127,24 @@ export default function SimulationPlayer({
     const [canvasRevision, setCanvasRevision] =
         useState(0);
 
+    const [stateResetRevision, setStateResetRevision] =
+        useState(0);
+
     const [error, setError] =
         useState<string>();
 
     const loaderExists =
         getSimulationLoader(simulationId) !==
         undefined;
+
+    const compiledFunctions = useMemo(
+        () =>
+            compileSimulationFunctions(
+                definition?.functionInputs ?? {},
+                functionExpressions,
+            ),
+        [definition, functionExpressions],
+    );
 
     const reportRuntimeError =
         useCallback((message: string) => {
@@ -140,6 +171,12 @@ export default function SimulationPlayer({
                 setParameters(
                     createDefaultParameterValues(
                         loadedDefinition.parameters,
+                    ),
+                );
+
+                setFunctionExpressions(
+                    createDefaultFunctionExpressions(
+                        loadedDefinition.functionInputs,
                     ),
                 );
 
@@ -308,26 +345,33 @@ export default function SimulationPlayer({
 
     useEffect(() => {
         parametersRef.current = parameters;
+        functionsRef.current = compiledFunctions;
+    }, [parameters, compiledFunctions]);
 
+    useEffect(() => {
         if (!definition) {
             return;
         }
 
         stateRef.current =
-            definition.createState(parameters);
+            definition.createState(
+                parametersRef.current,
+                functionsRef.current,
+            );
         elapsedTimeRef.current = 0;
 
         drawCurrentFrame(
             definition,
             graphicsRef.current,
             stateRef.current,
-            parameters,
+            parametersRef.current,
+            functionsRef.current,
             elapsedTimeRef.current,
             reportRuntimeError,
         );
     }, [
         definition,
-        parameters,
+        stateResetRevision,
         reportRuntimeError,
     ]);
 
@@ -341,11 +385,14 @@ export default function SimulationPlayer({
             graphicsRef.current,
             stateRef.current,
             parametersRef.current,
+            functionsRef.current,
             elapsedTimeRef.current,
             reportRuntimeError,
         );
     }, [
         definition,
+        parameters,
+        compiledFunctions,
         canvasRevision,
         reportRuntimeError,
     ]);
@@ -407,6 +454,7 @@ export default function SimulationPlayer({
                     stateRef.current =
                         activeDefinition.createState(
                             parametersRef.current,
+                            functionsRef.current,
                         );
                 }
 
@@ -426,6 +474,7 @@ export default function SimulationPlayer({
                         fixedTimeStep,
                         elapsedTimeRef.current +
                             fixedTimeStep,
+                        functionsRef.current,
                     );
 
                     elapsedTimeRef.current +=
@@ -440,6 +489,7 @@ export default function SimulationPlayer({
                             activeState,
                             parametersRef.current,
                             elapsedTimeRef.current,
+                            functionsRef.current,
                         )
                     ) {
                         setIsPlaying(false);
@@ -456,6 +506,7 @@ export default function SimulationPlayer({
                     graphicsRef.current,
                     stateRef.current,
                     parametersRef.current,
+                    functionsRef.current,
                     elapsedTimeRef.current,
                     reportRuntimeError,
                 );
@@ -522,6 +573,7 @@ export default function SimulationPlayer({
         stateRef.current =
             definition.createState(
                 parametersRef.current,
+                functionsRef.current,
             );
         elapsedTimeRef.current = 0;
 
@@ -530,6 +582,7 @@ export default function SimulationPlayer({
             graphicsRef.current,
             stateRef.current,
             parametersRef.current,
+            functionsRef.current,
             0,
             reportRuntimeError,
         );
@@ -545,6 +598,36 @@ export default function SimulationPlayer({
                 [key]: value,
             }),
         );
+
+        if (
+            definition?.parameters[key]
+                ?.resetOnChange !== false
+        ) {
+            setStateResetRevision(
+                (revision) => revision + 1,
+            );
+        }
+    }
+
+    function handleFunctionChange(
+        key: string,
+        expression: string,
+    ) {
+        setFunctionExpressions(
+            (currentExpressions) => ({
+                ...currentExpressions,
+                [key]: expression,
+            }),
+        );
+
+        if (
+            definition?.functionInputs[key]
+                ?.resetOnChange !== false
+        ) {
+            setStateResetRevision(
+                (revision) => revision + 1,
+            );
+        }
     }
 
     const title =
@@ -635,11 +718,13 @@ export default function SimulationPlayer({
                                         state,
                                         parametersRef.current,
                                         elapsedTimeRef.current,
+                                        functionsRef.current,
                                     )
                                 ) {
                                     stateRef.current =
                                         definition.createState(
                                             parametersRef.current,
+                                            functionsRef.current,
                                         );
                                     elapsedTimeRef.current = 0;
                                 }
@@ -660,6 +745,21 @@ export default function SimulationPlayer({
                             Reset
                         </button>
                     </div>
+
+                    <FunctionInputs
+                        definitions={
+                            definition.functionInputs
+                        }
+                        expressions={
+                            functionExpressions
+                        }
+                        functions={
+                            compiledFunctions
+                        }
+                        onChange={
+                            handleFunctionChange
+                        }
+                    />
 
                     <SimulationControls
                         definitions={
@@ -697,6 +797,7 @@ function drawCurrentFrame(
     graphics: CanvasGraphics | undefined,
     state: unknown,
     parameters: RuntimeParameterValues,
+    functions: RuntimeSimulationFunctions,
     elapsedTime: number,
     reportError: (
         message: string,
@@ -710,11 +811,29 @@ function drawCurrentFrame(
     }
 
     try {
-        const bounds =
+        const axes = definition.getAxes(
+            state,
+            parameters,
+            functions,
+            elapsedTime,
+        );
+
+        const authoredBounds =
             definition.getWorldBounds(
                 state,
                 parameters,
+                functions,
             );
+
+        const bounds = axes
+            ? {
+                  ...authoredBounds,
+                  padding: Math.max(
+                      authoredBounds.padding ?? 28,
+                      getMinimumAxisPadding(axes),
+                  ),
+              }
+            : authoredBounds;
 
         const viewport = new Viewport2D(
             graphics.width,
@@ -727,13 +846,107 @@ function drawCurrentFrame(
             viewport,
             state,
             parameters,
+            functions,
             elapsedTime,
         });
+
+        drawConfiguredFunctions(
+            definition,
+            graphics,
+            viewport,
+            functions,
+        );
+
+        if (axes) {
+            graphics.axes(
+                viewport,
+                axes,
+            );
+        }
     } catch (drawError: unknown) {
         reportError(
             getErrorMessage(drawError),
         );
     }
+}
+
+function drawConfiguredFunctions(
+    definition:
+        RuntimeSimulationDefinition,
+    graphics: CanvasGraphics,
+    viewport: Viewport2D,
+    functions:
+        RuntimeSimulationFunctions,
+) {
+    for (const [key, functionDefinition] of
+        Object.entries(
+            definition.functionInputs,
+        )) {
+        const functionValue = functions[key];
+
+        if (
+            functionDefinition.autoDraw === false ||
+            !functionValue ||
+            functionValue.error
+        ) {
+            continue;
+        }
+
+        graphics.functionGraph(
+            viewport,
+            functionValue.evaluate,
+            {
+                domain:
+                    functionDefinition.domain,
+                samples:
+                    functionDefinition.samples,
+                color:
+                    functionDefinition.color,
+                width:
+                    functionDefinition.lineWidth,
+                pattern:
+                    functionDefinition.linePattern,
+            },
+        );
+    }
+}
+
+
+function getMinimumAxisPadding(
+    axes: import("./simulationTypes").SimulationAxesDefinition,
+): number {
+    const axisDefinitions = [
+        axes.x,
+        axes.y,
+    ].filter(
+        (axis) => axis !== false && axis !== undefined,
+    );
+
+    if (axisDefinitions.length === 0) {
+        return 28;
+    }
+
+    const hasTicks = axisDefinitions.some(
+        (axis) => Boolean(axis?.ticks),
+    );
+
+    const hasLabels = axisDefinitions.some(
+        (axis) => Boolean(axis?.label || axis?.unit),
+    );
+
+    if (hasTicks && hasLabels) {
+        return 64;
+    }
+
+    if (hasTicks) {
+        return 46;
+    }
+
+    if (hasLabels) {
+        return 38;
+    }
+
+    return 28;
 }
 
 function formatSimulationId(

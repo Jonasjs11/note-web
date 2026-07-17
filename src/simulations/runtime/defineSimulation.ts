@@ -3,11 +3,18 @@ import type {
 } from "./CanvasGraphics";
 
 import type {
+    RuntimeSimulationFunctions,
+    SimulationFunctionDefinitions,
+    SimulationFunctionValues,
+} from "./functionDefinitions";
+
+import type {
     Viewport2D,
 } from "./Viewport2D";
 
 import type {
     RuntimeParameterValues,
+    SimulationAxesDefinition,
     SimulationParameterDefinitions,
     SimulationParameterValues,
     WorldBounds,
@@ -17,12 +24,16 @@ export interface SimulationDrawContext<
     State,
     Definitions extends
         SimulationParameterDefinitions,
+    FunctionDefinitions extends
+        SimulationFunctionDefinitions,
 > {
     graphics: CanvasGraphics;
     viewport: Viewport2D;
     state: State;
     parameters:
         SimulationParameterValues<Definitions>;
+    functions:
+        SimulationFunctionValues<FunctionDefinitions>;
     elapsedTime: number;
 }
 
@@ -30,6 +41,8 @@ export interface SimulationDefinition<
     Definitions extends
         SimulationParameterDefinitions,
     State,
+    FunctionDefinitions extends
+        SimulationFunctionDefinitions = {},
 > {
     id: string;
     title: string;
@@ -40,6 +53,22 @@ export interface SimulationDefinition<
     maxFrameDelta?: number;
 
     parameters: Definitions;
+    functionInputs?: FunctionDefinitions;
+
+    /**
+     * Optional runtime-rendered axes. Ticks and units are configured here,
+     * so individual simulations do not need to implement them.
+     */
+    axes?:
+        | SimulationAxesDefinition
+        | ((
+              state: State,
+              parameters:
+                  SimulationParameterValues<Definitions>,
+              functions:
+                  SimulationFunctionValues<FunctionDefinitions>,
+              elapsedTime: number,
+          ) => SimulationAxesDefinition | undefined);
 
     world:
         | WorldBounds
@@ -47,11 +76,15 @@ export interface SimulationDefinition<
               state: State,
               parameters:
                   SimulationParameterValues<Definitions>,
+              functions:
+                  SimulationFunctionValues<FunctionDefinitions>,
           ) => WorldBounds);
 
     create(
         parameters:
             SimulationParameterValues<Definitions>,
+        functions:
+            SimulationFunctionValues<FunctionDefinitions>,
     ): State;
 
     update(
@@ -60,13 +93,16 @@ export interface SimulationDefinition<
             SimulationParameterValues<Definitions>,
         deltaTime: number,
         elapsedTime: number,
+        functions:
+            SimulationFunctionValues<FunctionDefinitions>,
     ): void;
 
     draw(
         context:
             SimulationDrawContext<
                 State,
-                Definitions
+                Definitions,
+                FunctionDefinitions
             >,
     ): void;
 
@@ -75,6 +111,8 @@ export interface SimulationDefinition<
         parameters:
             SimulationParameterValues<Definitions>,
         elapsedTime: number,
+        functions:
+            SimulationFunctionValues<FunctionDefinitions>,
     ): boolean;
 
     describe?(
@@ -82,6 +120,8 @@ export interface SimulationDefinition<
         parameters:
             SimulationParameterValues<Definitions>,
         elapsedTime: number,
+        functions:
+            SimulationFunctionValues<FunctionDefinitions>,
     ): string;
 }
 
@@ -97,8 +137,21 @@ export interface RuntimeSimulationDefinition {
     parameters:
         SimulationParameterDefinitions;
 
+    functionInputs:
+        SimulationFunctionDefinitions;
+
+    getAxes(
+        state: unknown,
+        parameters: RuntimeParameterValues,
+        functions:
+            RuntimeSimulationFunctions,
+        elapsedTime: number,
+    ): SimulationAxesDefinition | undefined;
+
     createState(
         parameters: RuntimeParameterValues,
+        functions:
+            RuntimeSimulationFunctions,
     ): unknown;
 
     updateState(
@@ -106,6 +159,8 @@ export interface RuntimeSimulationDefinition {
         parameters: RuntimeParameterValues,
         deltaTime: number,
         elapsedTime: number,
+        functions:
+            RuntimeSimulationFunctions,
     ): void;
 
     drawState(context: {
@@ -113,24 +168,32 @@ export interface RuntimeSimulationDefinition {
         viewport: Viewport2D;
         state: unknown;
         parameters: RuntimeParameterValues;
+        functions:
+            RuntimeSimulationFunctions;
         elapsedTime: number;
     }): void;
 
     getWorldBounds(
         state: unknown,
         parameters: RuntimeParameterValues,
+        functions:
+            RuntimeSimulationFunctions,
     ): WorldBounds;
 
     isStateComplete(
         state: unknown,
         parameters: RuntimeParameterValues,
         elapsedTime: number,
+        functions:
+            RuntimeSimulationFunctions,
     ): boolean;
 
     describeState(
         state: unknown,
         parameters: RuntimeParameterValues,
         elapsedTime: number,
+        functions:
+            RuntimeSimulationFunctions,
     ): string | undefined;
 }
 
@@ -142,11 +205,14 @@ export function defineSimulation<
     const Definitions extends
         SimulationParameterDefinitions,
     State,
+    const FunctionDefinitions extends
+        SimulationFunctionDefinitions = {},
 >(
     definition:
         SimulationDefinition<
             Definitions,
-            State
+            State,
+            FunctionDefinitions
         >,
 ): RuntimeSimulationDefinition {
     return {
@@ -162,11 +228,41 @@ export function defineSimulation<
             definition.maxFrameDelta ?? 0.1,
 
         parameters: definition.parameters,
+        functionInputs:
+            definition.functionInputs ?? {},
+        getAxes(
+            state,
+            parameters,
+            functions,
+            elapsedTime,
+        ) {
+            if (!definition.axes) {
+                return undefined;
+            }
 
-        createState(parameters) {
+            if (typeof definition.axes !== "function") {
+                return definition.axes;
+            }
+
+            return definition.axes(
+                state as State,
+                parameters as
+                    SimulationParameterValues<Definitions>,
+                functions as
+                    SimulationFunctionValues<FunctionDefinitions>,
+                elapsedTime,
+            );
+        },
+
+        createState(
+            parameters,
+            functions,
+        ) {
             return definition.create(
                 parameters as
                     SimulationParameterValues<Definitions>,
+                functions as
+                    SimulationFunctionValues<FunctionDefinitions>,
             );
         },
 
@@ -175,6 +271,7 @@ export function defineSimulation<
             parameters,
             deltaTime,
             elapsedTime,
+            functions,
         ) {
             definition.update(
                 state as State,
@@ -182,6 +279,8 @@ export function defineSimulation<
                     SimulationParameterValues<Definitions>,
                 deltaTime,
                 elapsedTime,
+                functions as
+                    SimulationFunctionValues<FunctionDefinitions>,
             );
         },
 
@@ -190,6 +289,7 @@ export function defineSimulation<
             viewport,
             state,
             parameters,
+            functions,
             elapsedTime,
         }) {
             definition.draw({
@@ -199,6 +299,9 @@ export function defineSimulation<
                 parameters:
                     parameters as
                         SimulationParameterValues<Definitions>,
+                functions:
+                    functions as
+                        SimulationFunctionValues<FunctionDefinitions>,
                 elapsedTime,
             });
         },
@@ -206,16 +309,22 @@ export function defineSimulation<
         getWorldBounds(
             state,
             parameters,
+            functions,
         ) {
             const typedParameters =
                 parameters as
                     SimulationParameterValues<Definitions>;
+
+            const typedFunctions =
+                functions as
+                    SimulationFunctionValues<FunctionDefinitions>;
 
             return typeof definition.world ===
                 "function"
                 ? definition.world(
                       state as State,
                       typedParameters,
+                      typedFunctions,
                   )
                 : definition.world;
         },
@@ -224,6 +333,7 @@ export function defineSimulation<
             state,
             parameters,
             elapsedTime,
+            functions,
         ) {
             return (
                 definition.isComplete?.(
@@ -231,6 +341,8 @@ export function defineSimulation<
                     parameters as
                         SimulationParameterValues<Definitions>,
                     elapsedTime,
+                    functions as
+                        SimulationFunctionValues<FunctionDefinitions>,
                 ) ?? false
             );
         },
@@ -239,12 +351,15 @@ export function defineSimulation<
             state,
             parameters,
             elapsedTime,
+            functions,
         ) {
             return definition.describe?.(
                 state as State,
                 parameters as
                     SimulationParameterValues<Definitions>,
                 elapsedTime,
+                functions as
+                    SimulationFunctionValues<FunctionDefinitions>,
             );
         },
     };
