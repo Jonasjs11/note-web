@@ -35,6 +35,11 @@ export default function Layout() {
         setSiteContentsSections,
     ] = useState<Section[]>([]);
 
+    const [
+        isSidebarOpen,
+        setIsSidebarOpen,
+    ] = useState(false);
+
     const location = useLocation();
 
     useEffect(() => {
@@ -70,9 +75,9 @@ export default function Layout() {
             }
 
             /*
-            * MathJax equation anchors can be created
-            * shortly after the React page renders.
-            */
+             * MathJax equation anchors can be created
+             * shortly after the React page renders.
+             */
             if (attempt < 20) {
                 attempt++;
 
@@ -96,12 +101,69 @@ export default function Layout() {
         location.hash,
     ]);
 
+    useEffect(() => {
+        if (!isSidebarOpen) {
+            return;
+        }
+
+        function handleKeyDown(
+            event: KeyboardEvent,
+        ): void {
+            if (event.key === "Escape") {
+                setIsSidebarOpen(false);
+            }
+        }
+
+        document.addEventListener(
+            "keydown",
+            handleKeyDown,
+        );
+
+        return () => {
+            document.removeEventListener(
+                "keydown",
+                handleKeyDown,
+            );
+        };
+    }, [
+        isSidebarOpen,
+    ]);
+
     return (
         <SubjectProvider>
-            <div className="layout">
-                <Header />
+            <div
+                className={
+                    isSidebarOpen
+                        ? "layout layout--sidebar-open"
+                        : "layout"
+                }
+            >
+                <Header
+                    isSidebarOpen={isSidebarOpen}
+                    onToggleSidebar={() => {
+                        setIsSidebarOpen(
+                            currentlyOpen =>
+                                !currentlyOpen,
+                        );
+                    }}
+                />
 
-                <Sidebar />
+                <Sidebar
+                    onNavigate={() => {
+                        setIsSidebarOpen(false);
+                    }}
+                />
+
+                {isSidebarOpen && (
+                    <button
+                        type="button"
+                        className="sidebar-backdrop"
+                        aria-label="Close navigation"
+                        onClick={() => {
+                            setIsSidebarOpen(false);
+                        }}
+                    />
+                )}
 
                 <main className="note-content-holder">
                     <div className="note-content-layout">

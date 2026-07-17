@@ -466,14 +466,78 @@
     }
 }
 
-@media (max-width: 760px) {
-    .app-header__brand-name {
-        display: none;
+.sidebar-toggle {
+    display: none;
+}
+
+.sidebar-toggle:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+@media (max-width: 800px) {
+    .app-header {
+        grid-template-columns:
+            auto
+            minmax(0, 1fr);
+
+        grid-template-rows:
+            64px
+            48px;
+
+        height: var(--header-height);
+    }
+
+    .sidebar-toggle {
+        grid-column: 1;
+        grid-row: 1;
+
+        display: grid;
+        place-items: center;
+
+        width: 2.65rem;
+        height: 2.65rem;
+        margin-left: 0.65rem;
+        padding: 0;
+
+        color: var(--text-primary);
+        background: var(--search-background);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.78rem;
+
+        font-size: 1.45rem;
+        line-height: 1;
+
+        cursor: pointer;
+    }
+
+    .sidebar-toggle:hover {
+        background: var(--hover-background-strong);
     }
 
     .app-header__brand {
-        justify-content: center;
-        padding-inline: 0.5rem;
+        display: none;
+    }
+
+    .app-header__actions {
+        grid-column: 2;
+        grid-row: 1;
+
+        justify-content: flex-end;
+
+        overflow: hidden;
+        padding-right: 0.55rem;
+        padding-left: 0.4rem;
+    }
+
+    .subject-tabs {
+        grid-column: 1 / -1;
+        grid-row: 2;
+
+        width: 100%;
+        padding-inline: 0.35rem;
+
+        border-top: 1px solid var(--header-border);
     }
 
     .subject-tab {
@@ -481,10 +545,25 @@
     }
 
     .note-search {
-        width: 9rem;
+        width: min(9rem, 38vw);
     }
 
     .note-search__input {
         font-size: 0.82rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .app-header__actions {
+        gap: 0.35rem;
+    }
+
+    .note-search {
+        width: 7.25rem;
+    }
+
+    .subject-tab {
+        gap: 0.4rem;
+        padding-inline: 0.55rem;
     }
 }

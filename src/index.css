@@ -339,3 +339,64 @@ select {
     }
 }
 
+/* =========================================================
+   Mobile application shell
+   ========================================================= */
+
+.sidebar-backdrop {
+    display: none;
+}
+
+@media (max-width: 800px) {
+    :root {
+        --header-height: 112px;
+        --sidebar-width: 0px;
+    }
+
+    #root {
+        height: 100dvh;
+        min-height: 100vh;
+    }
+
+    .layout {
+        grid-template-columns:
+            minmax(0, 1fr);
+
+        grid-template-rows:
+            var(--header-height)
+            minmax(0, 1fr);
+
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .note-content-holder {
+        grid-column: 1;
+        grid-row: 2;
+
+        width: 100%;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        z-index: 40;
+
+        top: var(--header-height);
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        display: block;
+
+        padding: 0;
+        border: 0;
+
+        background: rgba(0, 0, 0, 0.52);
+
+        cursor: default;
+    }
+
+    .note-content-page__surface {
+        overflow-wrap: anywhere;
+    }
+}

@@ -18,7 +18,15 @@ import ThemeToggle from "./ThemeToggle";
 
 import "./Header.css";
 
-export default function Header() {
+interface HeaderProps {
+    isSidebarOpen: boolean;
+    onToggleSidebar: () => void;
+}
+
+export default function Header({
+    isSidebarOpen,
+    onToggleSidebar,
+}: HeaderProps) {
     const {
         subjects,
         selectedSubject,
@@ -27,6 +35,23 @@ export default function Header() {
 
     return (
         <header className="app-header">
+            <button
+                type="button"
+                className="sidebar-toggle"
+                aria-label={
+                    isSidebarOpen
+                        ? "Close navigation"
+                        : "Open navigation"
+                }
+                aria-controls="site-sidebar"
+                aria-expanded={isSidebarOpen}
+                onClick={onToggleSidebar}
+            >
+                <span aria-hidden="true">
+                    {isSidebarOpen ? "×" : "☰"}
+                </span>
+            </button>
+
             <Link
                 to="/"
                 className="app-header__brand"

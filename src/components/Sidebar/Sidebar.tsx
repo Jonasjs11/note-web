@@ -29,14 +29,20 @@ import type {
 
 import "./Sidebar.css";
 
+interface SidebarProps {
+    onNavigate?: () => void;
+}
+
 interface NavigationNodeProps {
     item: NavigationItem;
     depth: number;
+    onNavigate?: () => void;
 }
 
 function NavigationNode({
     item,
     depth,
+    onNavigate,
 }: NavigationNodeProps) {
     const isFolder = Boolean(
         item.children?.length,
@@ -53,17 +59,14 @@ function NavigationNode({
         return (
             <NavLink
                 to={item.path}
-                className={({ isActive }) => {
-                    return [
-                        "navigation-node",
-                        "navigation-page",
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                    `navigation-node navigation-page ${
                         isActive
                             ? "navigation-page-active"
-                            : "",
-                    ]
-                        .filter(Boolean)
-                        .join(" ");
-                }}
+                            : ""
+                    }`
+                }
                 style={indentationStyle}
             >
                 <span
@@ -85,9 +88,8 @@ function NavigationNode({
                 style={indentationStyle}
                 onClick={() => {
                     setIsExpanded(
-                        (currentlyExpanded) => {
-                            return !currentlyExpanded;
-                        },
+                        currentlyExpanded =>
+                            !currentlyExpanded,
                     );
                 }}
                 type="button"
@@ -119,6 +121,7 @@ function NavigationNode({
                             }
                             item={child}
                             depth={depth + 1}
+                            onNavigate={onNavigate}
                         />
                     ))}
                 </div>
@@ -127,7 +130,9 @@ function NavigationNode({
     );
 }
 
-export default function Sidebar() {
+export default function Sidebar({
+    onNavigate,
+}: SidebarProps) {
     const {
         selectedSubject,
         selectedPresentation,
@@ -138,12 +143,17 @@ export default function Sidebar() {
             notes,
             selectedSubject,
         );
-    }, [selectedSubject]);
+    }, [
+        selectedSubject,
+    ]);
 
     return (
         <aside
+            id="site-sidebar"
             className="sidebar"
-            aria-label={`${selectedPresentation.title} navigation`}
+            aria-label={
+                `${selectedPresentation.title} navigation`
+            }
             style={
                 {
                     "--subject-color":
@@ -164,6 +174,7 @@ export default function Sidebar() {
                             }
                             item={item}
                             depth={0}
+                            onNavigate={onNavigate}
                         />
                     ))
                 ) : (
