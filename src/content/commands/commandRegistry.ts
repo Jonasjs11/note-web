@@ -10,6 +10,8 @@ import TableCommandRenderer from "./renderers/TableCommandRenderer";
 
 import SectionAnchorCommandRenderer from "./renderers/SectionAnchorCommandRenderer";
 
+import SimulationCommandRenderer from "./renderers/SimulationCommandRenderer";
+
 
 export const commandRegistry =
     new Map<string, CommandRenderer>([
@@ -32,5 +34,9 @@ export const commandRegistry =
         [
             "section-anchor", 
             SectionAnchorCommandRenderer,
-        ]
+        ],
+        [
+            "simulation",
+            SimulationCommandRenderer,
+        ],
     ]);

@@ -98,6 +98,15 @@ export function createSectionAnchorToken(
     );
 }
 
+export function createSimulationToken(
+    simulationId: string,
+): string {
+    return encodeCommandToken(
+        "simulation",
+        [simulationId],
+    );
+}
+
 export interface FigureSubfigureCommandData {
     imageUrl?: string;
     imagePath: string;

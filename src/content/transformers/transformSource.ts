@@ -48,6 +48,10 @@ import {
 } from "./transformSectionHeadings";
 
 import {
+    transformSimulationCommands,
+} from "./transformSimulationCommands";
+
+import {
     transformTableEnvironments,
 } from "./transformTableEnvironments";
 
@@ -64,6 +68,7 @@ const transformers: SourceTransformer[] = [
 
     transformConceptCommands,
     transformReferenceCommands,
+    transformSimulationCommands,
     transformFigureEnvironments,
     transformTableEnvironments,
     transformLatexSyntax,
