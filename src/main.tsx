@@ -1,13 +1,41 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { RouterProvider } from "react-router-dom";
 
-import { router } from "./app/router";
+import {
+    RouterProvider,
+} from "react-router-dom";
+
+import LanguageProvider
+    from "./app/LanguageProvider";
+
+import ThemeProvider
+    from "./app/ThemeProvider";
+
+import {
+    initializeLanguage,
+} from "./app/language";
+
+import {
+    initializeTheme,
+} from "./app/theme";
+
+import {
+    router,
+} from "./app/router";
 
 import "./index.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+initializeLanguage();
+initializeTheme();
+
+ReactDOM.createRoot(
+    document.getElementById("root")!,
+).render(
     <React.StrictMode>
-        <RouterProvider router={router} />
-    </React.StrictMode>
+        <LanguageProvider>
+            <ThemeProvider>
+                <RouterProvider router={router} />
+            </ThemeProvider>
+        </LanguageProvider>
+    </React.StrictMode>,
 );

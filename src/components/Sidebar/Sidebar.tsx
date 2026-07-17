@@ -1,8 +1,31 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import {
+    useMemo,
+    useState,
+} from "react";
 
-import { navigation } from "../../content";
-import type { NavigationItem } from "../../types/Navigation";
+import type {
+    CSSProperties,
+} from "react";
+
+import {
+    NavLink,
+} from "react-router-dom";
+
+import {
+    useSubject,
+} from "../../app/SubjectContext";
+
+import {
+    buildSubjectNavigation,
+} from "../../content/builders/navigation";
+
+import {
+    notes,
+} from "../../content";
+
+import type {
+    NavigationItem,
+} from "../../types/Navigation";
 
 import "./Sidebar.css";
 
@@ -15,57 +38,85 @@ function NavigationNode({
     item,
     depth,
 }: NavigationNodeProps) {
-    const isFolder = Boolean(item.children?.length);
+    const isFolder = Boolean(
+        item.children?.length,
+    );
 
-    const [isExpanded, setIsExpanded] = useState(true); // true means start expanded
+    const [isExpanded, setIsExpanded] =
+        useState(item.expanded ?? true);
 
     const indentationStyle = {
-        paddingLeft: `${16 + depth * 20}px`,
+        paddingLeft: `${14 + depth * 18}px`,
     };
 
     if (!isFolder && item.path) {
         return (
             <NavLink
                 to={item.path}
-                className={({ isActive }) =>
-                    `navigation-node navigation-page ${
-                        isActive ? "navigation-page-active" : ""
-                    }`
-                }
+                className={({ isActive }) => {
+                    return [
+                        "navigation-node",
+                        "navigation-page",
+                        isActive
+                            ? "navigation-page-active"
+                            : "",
+                    ]
+                        .filter(Boolean)
+                        .join(" ");
+                }}
                 style={indentationStyle}
             >
-                <span className="navigation-arrow" />
+                <span
+                    className="navigation-arrow"
+                    aria-hidden="true"
+                />
 
-                <span>{item.title}</span>
+                <span className="navigation-label">
+                    {item.title}
+                </span>
             </NavLink>
         );
     }
 
     return (
-        <div>
+        <div className="navigation-branch">
             <button
                 className="navigation-node navigation-folder"
                 style={indentationStyle}
                 onClick={() => {
-                    setIsExpanded((currentlyExpanded) => {
-                        return !currentlyExpanded;
-                    });
+                    setIsExpanded(
+                        (currentlyExpanded) => {
+                            return !currentlyExpanded;
+                        },
+                    );
                 }}
                 type="button"
                 aria-expanded={isExpanded}
             >
-                <span className="navigation-arrow">
-                    {isExpanded ? "▼" : "▶"}
+                <span
+                    className={
+                        isExpanded
+                            ? "navigation-arrow navigation-arrow--expanded"
+                            : "navigation-arrow"
+                    }
+                    aria-hidden="true"
+                >
+                    <ChevronIcon />
                 </span>
 
-                <span>{item.title}</span>
+                <span className="navigation-label">
+                    {item.title}
+                </span>
             </button>
 
             {isExpanded && (
                 <div>
                     {item.children?.map((child) => (
                         <NavigationNode
-                            key={child.path ?? child.title}
+                            key={
+                                child.path ??
+                                child.title
+                            }
                             item={child}
                             depth={depth + 1}
                         />
@@ -77,15 +128,68 @@ function NavigationNode({
 }
 
 export default function Sidebar() {
+    const {
+        selectedSubject,
+        selectedPresentation,
+    } = useSubject();
+
+    const navigation = useMemo(() => {
+        return buildSubjectNavigation(
+            notes,
+            selectedSubject,
+        );
+    }, [selectedSubject]);
+
     return (
-        <aside className="sidebar">
-            {navigation.map((item) => (
-                <NavigationNode
-                    key={item.path ?? item.title}
-                    item={item}
-                    depth={0}
-                />
-            ))}
+        <aside
+            className="sidebar"
+            aria-label={`${selectedPresentation.title} navigation`}
+            style={
+                {
+                    "--subject-color":
+                        selectedPresentation.color,
+                } as CSSProperties
+            }
+        >
+            <div
+                key={selectedSubject}
+                className="sidebar__tree"
+            >
+                {navigation.length > 0 ? (
+                    navigation.map((item) => (
+                        <NavigationNode
+                            key={
+                                item.path ??
+                                item.title
+                            }
+                            item={item}
+                            depth={0}
+                        />
+                    ))
+                ) : (
+                    <p className="sidebar__empty">
+                        No notes in this subject yet.
+                    </p>
+                )}
+            </div>
         </aside>
+    );
+}
+
+function ChevronIcon() {
+    return (
+        <svg
+            viewBox="0 0 16 16"
+            aria-hidden="true"
+        >
+            <path
+                d="m6 3 5 5-5 5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
     );
 }

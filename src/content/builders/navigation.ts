@@ -1,16 +1,44 @@
-import type { NavigationItem } from "../../types/Navigation";
-import type { Note } from "../models/Note";
+import type {
+    NavigationItem,
+} from "../../types/Navigation";
+
+import type {
+    Note,
+} from "../models/Note";
 
 export function buildNavigation(
     notes: Note[],
 ): NavigationItem[] {
+    return buildNavigationItems(
+        notes,
+        (note) => [
+            note.subject,
+            ...note.folders,
+        ],
+    );
+}
+
+export function buildSubjectNavigation(
+    notes: Note[],
+    subject: string,
+): NavigationItem[] {
+    return buildNavigationItems(
+        notes.filter((note) => {
+            return note.subject === subject;
+        }),
+        (note) => note.folders,
+    );
+}
+
+function buildNavigationItems(
+    notes: Note[],
+    readFolders: (note: Note) => string[],
+): NavigationItem[] {
     const navigation: NavigationItem[] = [];
 
     for (const note of notes) {
-        const pathSegments = [
-            note.subject,
-            ...note.folders,
-        ];
+        const pathSegments =
+            readFolders(note);
 
         let currentLevel = navigation;
 
@@ -90,7 +118,10 @@ function formatTitle(value: string): string {
         .split(/[-_]/)
         .filter(Boolean)
         .map((word) => {
-            return word.charAt(0).toUpperCase() + word.slice(1);
+            return (
+                word.charAt(0).toUpperCase() +
+                word.slice(1)
+            );
         })
         .join(" ");
 }

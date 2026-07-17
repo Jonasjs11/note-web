@@ -11,14 +11,14 @@
     width: min(32rem, calc(100vw - 2rem));
     max-height: min(32rem, calc(100vh - 2rem));
 
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid var(--border-subtle);
     border-radius: 0.6rem;
 
-    background: #282828;
-    color: white;
+    background: var(--tooltip-background);
+    color: var(--text-primary);
 
     box-shadow:
-        0 0.8rem 2rem rgba(0, 0, 0, 0.35);
+        var(--floating-shadow);
 }
 .concept-tooltip-content {
     min-height: 0;
@@ -33,22 +33,22 @@
     padding: 0.75rem 1.25rem;
 
     border-top:
-        1px solid rgba(255, 255, 255, 0.14);
+        1px solid var(--border-subtle);
 
-    background: #303030;
+    background: var(--tooltip-footer-background);
 }
 
 .concept-tooltip-footer a {
     display: block;
 
-    color: #8ab4f8;
+    color: var(--link-color);
     font-weight: 600;
     text-align: right;
     text-decoration: none;
 }
 
 .concept-tooltip-footer a:hover {
-    color: white;
+    color: var(--text-primary);
     text-decoration: underline;
 }
 
@@ -81,4 +81,15 @@
 .markdown
 mjx-container[display="true"] {
     margin: 1rem 0;
+}
+.concept-tooltip-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.concept-tooltip-footer a {
+    margin-left: auto;
+    white-space: nowrap;
 }

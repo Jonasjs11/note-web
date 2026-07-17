@@ -1,4 +1,6 @@
-import { buildNavigation } from "./builders/navigation";
+import {
+    buildNavigation,
+} from "./builders/navigation";
 
 import {
     conceptRegistry,
@@ -6,15 +8,25 @@ import {
     getAllConceptIdentifiers,
 } from "./registry/conceptRegistry";
 
-import { concepts } from "./loader/loadConcepts";
-import { notes } from "./loader/loadNotes";
+import {
+    concepts,
+    conceptSubjects,
+    legacyConceptIds,
+} from "./loader/loadConcepts";
 
-export const navigation = buildNavigation(notes);
+import {
+    notes,
+} from "./loader/loadNotes";
+
+export const navigation =
+    buildNavigation(notes);
 
 export {
     conceptRegistry,
     concepts,
+    conceptSubjects,
     findConcept,
     getAllConceptIdentifiers,
+    legacyConceptIds,
     notes,
 };

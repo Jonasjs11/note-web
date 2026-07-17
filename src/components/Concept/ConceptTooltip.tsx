@@ -1,15 +1,43 @@
 import {
     forwardRef,
-    type HTMLAttributes,
 } from "react";
 
-import { Link } from "react-router-dom";
+import type {
+    HTMLAttributes,
+} from "react";
 
-import MarkdownRenderer from "../Markdown/MarkdownView";
+import {
+    Link,
+} from "react-router-dom";
 
-import { buildConceptPageSource } from "../../content/builders/buildConceptPageSource";
-import type { Concept } from "../../content/models/Concept";
-import { transformSource } from "../../content/transformers/transformSource";
+import {
+    useLanguage,
+} from "../../app/LanguageContext";
+
+import ConceptContentLanguageProvider
+    from "../../app/ConceptContentLanguageProvider";
+
+import LanguageToggle
+    from "../Header/LanguageToggle";
+
+import MarkdownRenderer
+    from "../Markdown/MarkdownView";
+
+import {
+    buildConceptPageSource,
+} from "../../content/builders/buildConceptPageSource";
+
+import {
+    resolveConceptTranslation,
+} from "../../content/models/Concept";
+
+import type {
+    Concept,
+} from "../../content/models/Concept";
+
+import {
+    transformSource,
+} from "../../content/transformers/transformSource";
 
 import "./ConceptTooltip.css";
 
@@ -17,6 +45,16 @@ interface ConceptTooltipProps
     extends HTMLAttributes<HTMLElement> {
     concept: Concept;
 }
+
+const openPageLabels = {
+    en: "Open concept page →",
+    da: "Åbn begrebsside →",
+} as const;
+
+const previewLabels = {
+    en: "concept preview",
+    da: "forhåndsvisning af begreb",
+} as const;
 
 const ConceptTooltip = forwardRef<
     HTMLElement,
@@ -29,14 +67,24 @@ const ConceptTooltip = forwardRef<
     },
     ref,
 ) {
-    const source =
-        buildConceptPageSource(concept);
+    const {
+        language,
+    } = useLanguage();
 
-    const transformedSource =
-        transformSource(
-            source,
-            `concept-tooltip:${concept.id}`,
-        );
+    const resolved = resolveConceptTranslation(
+        concept,
+        language,
+    );
+
+    const source = buildConceptPageSource(
+        concept,
+        language,
+    );
+
+    const transformedSource = transformSource(
+        source,
+        `concept-tooltip:${concept.id}:${language}`,
+    );
 
     const combinedClassName = [
         "concept-tooltip",
@@ -50,22 +98,30 @@ const ConceptTooltip = forwardRef<
             ref={ref}
             className={combinedClassName}
             aria-label={
-                `${concept.title} concept preview`
+                `${resolved.translation.title} ${previewLabels[resolved.language]}`
             }
             {...tooltipProps}
         >
             <div className="concept-tooltip-content">
-                <MarkdownRenderer
-                    key={`tooltip-${concept.id}`}
-                    source={transformedSource.value}
-                />
+                <ConceptContentLanguageProvider
+                    language={language}
+                >
+                    <MarkdownRenderer
+                        key={
+                            `tooltip-${concept.id}-${language}`
+                        }
+                        source={transformedSource.value}
+                    />
+                </ConceptContentLanguageProvider>
             </div>
 
             <footer className="concept-tooltip-footer">
+                <LanguageToggle variant="tooltip" />
+
                 <Link
                     to={`/concepts/${concept.id}`}
                 >
-                    Open concept page →
+                    {openPageLabels[language]}
                 </Link>
             </footer>
         </aside>

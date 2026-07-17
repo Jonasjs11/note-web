@@ -109,12 +109,12 @@
     /*
      * Visual indicator along the left side of the quote.
      */
-    border-left: 4px solid rgba(255, 255, 255, 0.25);
+    border-left: 4px solid var(--border-strong);
 
     /*
      * Makes quoted text slightly less prominent than body text.
      */
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--text-secondary);
 }
 
 
@@ -129,7 +129,7 @@
     padding: 0.15rem 0.35rem;
 
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--code-inline-background);
 
     /*
      * Uses a fixed-width font for code.
@@ -146,7 +146,7 @@
 
     padding: 1rem;
     border-radius: 6px;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--code-block-background);
 }
 
 .markdown pre code {
@@ -164,7 +164,7 @@
    ========================================================= */
 
 .markdown a {
-    color: #8ab4f8;
+    color: var(--link-color);
 }
 
 
@@ -196,7 +196,7 @@
      */
     padding: 0.6rem 0.8rem;
 
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid var(--table-border);
     text-align: left;
 }
 
@@ -256,7 +256,7 @@
    ========================================================= */
 
 .concept-link {
-    color: #8ab4f8;
+    color: var(--link-color);
 
     /*
      * A dotted underline distinguishes concepts from normal links.
@@ -267,7 +267,7 @@
 }
 
 .concept-link:hover {
-    color: white;
+    color: var(--link-hover);
 }
 
 
@@ -279,7 +279,7 @@
     /*
      * Makes malformed or unsupported semantic commands visible.
      */
-    color: #ff8a80;
+    color: var(--danger);
     font-family: Consolas, "Courier New", monospace;
 }
 
@@ -289,13 +289,13 @@
    ========================================================= */
 
 .reference-link {
-    color: #8ab4f8;
+    color: var(--link-color);
     text-decoration: underline;
     text-underline-offset: 0.2em;
 }
 
 .reference-link:hover {
-    color: white;
+    color: var(--link-hover);
 }
 
 
@@ -728,7 +728,7 @@ html {
     width: 100%;
     margin: 0;
     border-collapse: collapse;
-    border: 1px solid rgba(255, 255, 255, 0.24);
+    border: 1px solid var(--table-border);
     text-align: left;
 }
 
@@ -740,7 +740,7 @@ html {
      * on individual columns.
      */
     padding: 0.6rem 0.8rem;
-    border: 1px solid rgba(255, 255, 255, 0.24);
+    border: 1px solid var(--table-border);
     overflow-wrap: anywhere;
 }
 
@@ -749,7 +749,7 @@ html {
      * Slightly separates the header row from the table body.
      */
     font-weight: 600;
-    background: rgba(255, 255, 255, 0.07);
+    background: var(--table-header-background);
 }
 
 .note-table__markdown tbody tr:nth-child(even) {
@@ -757,7 +757,7 @@ html {
      * A subtle alternating row background improves readability
      * without replacing the visible cell borders.
      */
-    background: rgba(255, 255, 255, 0.025);
+    background: var(--table-stripe-background);
 }
 
 

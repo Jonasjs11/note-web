@@ -1,14 +1,24 @@
 .simulation-player {
-    --simulation-background: #17191f;
-    --simulation-panel: #20232b;
-    --simulation-control: #292d36;
-    --simulation-foreground: rgba(255, 255, 255, 0.94);
-    --simulation-muted: rgba(255, 255, 255, 0.58);
-    --simulation-grid: rgba(255, 255, 255, 0.075);
-    --simulation-border: rgba(255, 255, 255, 0.09);
-    --simulation-accent: #78a9ff;
-    --simulation-secondary: #a78bfa;
-    --simulation-danger: #fb7185;
+    --simulation-background:
+        var(--simulation-canvas-background);
+    --simulation-panel:
+        var(--simulation-panel-background);
+    --simulation-control:
+        var(--simulation-control-background);
+    --simulation-foreground:
+        var(--simulation-foreground-color);
+    --simulation-muted:
+        var(--simulation-muted-color);
+    --simulation-grid:
+        var(--simulation-grid-color);
+    --simulation-border:
+        var(--simulation-border-color);
+    --simulation-accent:
+        var(--simulation-accent-color);
+    --simulation-secondary:
+        var(--simulation-secondary-color);
+    --simulation-danger:
+        var(--simulation-danger-color);
 
     width: 100%;
     margin: 2rem 0;
@@ -123,7 +133,7 @@
 }
 
 .simulation-player__button--primary {
-    color: #111318;
+    color: var(--simulation-primary-button-text);
     background: var(--simulation-accent);
     border-color: transparent;
     font-weight: 650;

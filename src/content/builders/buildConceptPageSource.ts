@@ -1,35 +1,81 @@
-import type { Concept } from "../models/Concept";
+import type {
+    ContentLanguage,
+} from "../../i18n/contentLanguage";
+
+import {
+    resolveConceptTranslation,
+} from "../models/Concept";
+
+import type {
+    Concept,
+} from "../models/Concept";
+
+import {
+    findConcept,
+} from "../registry/conceptRegistry";
+
+interface ConceptPageLabels {
+    shortDefinition: string;
+    notation: string;
+    illustration: string;
+    formalDefinition: string;
+    prerequisites: string;
+    illustrationAlt: (title: string) => string;
+}
+
+const labels:
+    Record<ContentLanguage, ConceptPageLabels> = {
+        en: {
+            shortDefinition: "Short definition",
+            notation: "Notation",
+            illustration: "Illustration",
+            formalDefinition: "Formal definition",
+            prerequisites: "Prerequisites",
+            illustrationAlt: (title) => {
+                return `Illustration of ${title}`;
+            },
+        },
+
+        da: {
+            shortDefinition: "Kort definition",
+            notation: "Notation",
+            illustration: "Illustration",
+            formalDefinition: "Formel definition",
+            prerequisites: "Forudsætninger",
+            illustrationAlt: (title) => {
+                return `Illustration af ${title}`;
+            },
+        },
+    };
 
 export function buildConceptPageSource(
     concept: Concept,
+    requestedLanguage: ContentLanguage = "en",
 ): string {
-    const sections: string[] = [
-        `# ${concept.title}`,
-    ];
+    const resolved = resolveConceptTranslation(
+        concept,
+        requestedLanguage,
+    );
 
-    if (concept.aliases.length > 0) {
-        sections.push(
-            [
-                "## Aliases",
-                concept.aliases
-                    .map((alias) => `- ${alias}`)
-                    .join("\n"),
-            ].join("\n\n"),
-        );
-    }
+    const translation = resolved.translation;
+    const text = labels[resolved.language];
+
+    const sections: string[] = [
+        `# ${translation.title}`,
+    ];
 
     sections.push(
         [
-            "## Short definition",
-            concept.shortDefinition.trim(),
+            `## ${text.shortDefinition}`,
+            translation.shortDefinition.trim(),
         ].join("\n\n"),
     );
 
-    if (concept.notation) {
+    if (translation.notation) {
         sections.push(
             [
-                "## Notation",
-                concept.notation.trim(),
+                `## ${text.notation}`,
+                translation.notation.trim(),
             ].join("\n\n"),
         );
     }
@@ -37,17 +83,17 @@ export function buildConceptPageSource(
     if (concept.illustration) {
         sections.push(
             [
-                "## Illustration",
-                `![Illustration of ${concept.title}](${concept.illustration})`,
+                `## ${text.illustration}`,
+                `![${text.illustrationAlt(translation.title)}](${concept.illustration})`,
             ].join("\n\n"),
         );
     }
 
-    if (concept.formalDefinition) {
+    if (translation.formalDefinition) {
         sections.push(
             [
-                "## Formal definition",
-                concept.formalDefinition.trim(),
+                `## ${text.formalDefinition}`,
+                translation.formalDefinition.trim(),
             ].join("\n\n"),
         );
     }
@@ -55,10 +101,20 @@ export function buildConceptPageSource(
     if (concept.prerequisites.length > 0) {
         sections.push(
             [
-                "## Prerequisites",
+                `## ${text.prerequisites}`,
                 concept.prerequisites
                     .map((id) => {
-                        return `- [${formatTitle(id)}](/concepts/${id})`;
+                        const prerequisite =
+                            findConcept(id);
+
+                        const title = prerequisite
+                            ? resolveConceptTranslation(
+                                  prerequisite,
+                                  resolved.language,
+                              ).translation.title
+                            : formatTitle(id);
+
+                        return `- [${title}](/concepts/${id})`;
                     })
                     .join("\n"),
             ].join("\n\n"),

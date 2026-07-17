@@ -1,26 +1,48 @@
 .sidebar {
-    padding: 1rem 0;
+    grid-column: 1;
+    grid-row: 2;
+
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    padding: 0.8rem 0;
+
+    color: var(--text-primary);
+    background: var(--sidebar-background);
+    border-right: 1px solid var(--border-subtle);
+}
+
+.sidebar__tree {
+    min-width: 0;
+}
+
+.navigation-branch {
+    min-width: 0;
 }
 
 .navigation-node {
+    position: relative;
+
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.42rem;
 
     width: 100%;
-    min-height: 2rem;
+    min-height: 2.15rem;
 
-    padding-top: 0.35rem;
-    padding-right: 1rem;
-    padding-bottom: 0.35rem;
-
-    border: none;
-    border-radius: 0;
+    padding-top: 0.37rem;
+    padding-right: 0.85rem;
+    padding-bottom: 0.37rem;
 
     color: inherit;
     background: transparent;
+    border: 0;
+    border-radius: 0;
 
     font: inherit;
+    font-size: 0.88rem;
     text-align: left;
     text-decoration: none;
 
@@ -28,37 +50,85 @@
 }
 
 .navigation-node:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--hover-background);
 }
 
 .navigation-folder {
-    font-weight: 600;
+    color: var(--text-secondary);
+    font-weight: 650;
+}
+
+.navigation-folder:hover {
+    color: var(--text-primary);
 }
 
 .navigation-page {
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--text-secondary);
 }
 
 .navigation-page:hover {
-    color: white;
+    color: var(--text-primary);
 }
 
 .navigation-page-active {
-    color: white;
-    background: rgba(255, 255, 255, 0.14);
-    font-weight: 600;
+    color: var(--text-primary);
+    background:
+        color-mix(
+            in srgb,
+            var(--subject-color) 13%,
+            transparent
+        );
+    box-shadow:
+        inset 3px 0
+        var(--subject-color);
+    font-weight: 650;
 }
 
 .navigation-page-active:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background:
+        color-mix(
+            in srgb,
+            var(--subject-color) 18%,
+            transparent
+        );
 }
 
 .navigation-arrow {
-    display: inline-block;
-    flex-shrink: 0;
+    display: grid;
+    place-items: center;
 
-    width: 1rem;
+    flex: none;
 
-    font-size: 0.7rem;
-    text-align: center;
+    width: 0.95rem;
+    height: 0.95rem;
+
+    color: var(--text-muted);
+
+    transition: transform 120ms ease;
+}
+
+.navigation-arrow svg {
+    width: 0.78rem;
+    height: 0.78rem;
+}
+
+.navigation-arrow--expanded {
+    transform: rotate(90deg);
+}
+
+.navigation-label {
+    min-width: 0;
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar__empty {
+    margin: 0;
+    padding: 1rem;
+
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
 }

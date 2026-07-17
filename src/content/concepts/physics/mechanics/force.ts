@@ -1,41 +1,41 @@
-import type { Concept } from "../../../models/Concept";
+import {
+    defineConcept,
+} from "../../../models/Concept";
 
-const force: Concept = {
+export default defineConcept({
     id: "force",
-    title: "Force",
 
-    aliases: [
-        "forces",
-        "net force",
-    ],
+    translations: {
+        en: {
+            title: "Force",
+            aliases: [
+                "net force",
+            ],
+            shortDefinition:
+                "An interaction that can change an object's motion.",
+            notation: "$F$",
+            formalDefinition:
+                "Write the complete English definition here.",
+        },
 
-    shortDefinition: String.raw`
-A **force** is an interaction that can change an object's motion.
-`,
+        da: {
+            title: "Kraft",
+            aliases: [
+                "nettokraft",
+            ],
+            shortDefinition:
+                "En vekselvirkning, der kan ændre et objekts bevægelse.",
+            notation: "$F$",
+            formalDefinition:
+                "Skriv den fulde danske definition her.",
+        },
+    },
 
-    notation: String.raw`
-\[
-\vec{F}
-\]
-`,
+    illustration:
+        "/illustrations/force.svg",
 
-    formalDefinition: String.raw`
-Newton's second law states that the net force acting on an object equals its mass multiplied by its acceleration.
-
-\[
-\vec{F}_{\mathrm{net}} = m\vec{a}
-\]
-
-The SI unit of force is the **newton**, written as $\mathrm{N}$.
-`,
-
+    /* Prerequisites also use permanent English IDs. */
     prerequisites: [
-        "mass",
-        "acceleration",
-        "vector",
+        "position",
     ],
-
-    illustration: "/illustrations/force.svg",
-};
-
-export default force;
+});

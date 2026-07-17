@@ -1,5 +1,10 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import {
+    useState,
+} from "react";
+
+import {
+    Link,
+} from "react-router-dom";
 
 import {
     autoUpdate,
@@ -15,7 +20,17 @@ import {
     useInteractions,
 } from "@floating-ui/react";
 
-import { findConcept } from "../../content";
+import {
+    findConcept,
+} from "../../content";
+
+import {
+    useConceptContentLanguage,
+} from "../../app/ConceptContentLanguageContext";
+
+import {
+    getConceptTranslation,
+} from "../../content/models/Concept";
 
 import ConceptTooltip from "./ConceptTooltip";
 
@@ -30,7 +45,11 @@ export default function ConceptReference({
 }: ConceptReferenceProps) {
     const concept = findConcept(id);
 
-    const [isOpen, setIsOpen] = useState(false);
+    const conceptContentLanguage =
+        useConceptContentLanguage();
+
+    const [isOpen, setIsOpen] =
+        useState(false);
 
     const {
         refs,
@@ -39,9 +58,7 @@ export default function ConceptReference({
     } = useFloating({
         open: isOpen,
         onOpenChange: setIsOpen,
-
         placement: "bottom-start",
-
         middleware: [
             offset(8),
             flip({
@@ -51,7 +68,6 @@ export default function ConceptReference({
                 padding: 12,
             }),
         ],
-
         whileElementsMounted: autoUpdate,
     });
 
@@ -60,7 +76,6 @@ export default function ConceptReference({
             open: 150,
             close: 75,
         },
-
         handleClose: safePolygon({
             buffer: 1,
         }),
@@ -89,21 +104,38 @@ export default function ConceptReference({
         );
     }
 
+    /*
+     * Option B: references in authored notes remain English.
+     * Generated concept pages provide their own content-language
+     * context, allowing references inside Danish concepts to use
+     * Danish titles. Explicit display text is always preserved.
+     */
+    const authoredDisplayText =
+        alias ??
+        getConceptTranslation(
+            concept,
+            conceptContentLanguage ?? "en",
+        ).title;
+
     return (
         <span className="concept-reference">
             <Link
-                ref={refs.setReference}
+                ref={(node) => {
+                    refs.setReference(node);
+                }}
                 to={`/concepts/${concept.id}`}
                 className="concept-link"
                 {...getReferenceProps()}
             >
-                {alias ?? concept.title}
+                {authoredDisplayText}
             </Link>
 
             {isOpen && (
                 <FloatingPortal>
                     <ConceptTooltip
-                        ref={refs.setFloating}
+                        ref={(node) => {
+                            refs.setFloating(node);
+                        }}
                         concept={concept}
                         style={floatingStyles}
                         {...getFloatingProps()}

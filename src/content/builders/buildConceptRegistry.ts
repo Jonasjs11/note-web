@@ -1,4 +1,10 @@
-import type { Concept } from "../models/Concept";
+import {
+    getAllConceptAliases,
+} from "../models/Concept";
+
+import type {
+    Concept,
+} from "../models/Concept";
 
 export type ConceptRegistry = ReadonlyMap<
     string,
@@ -18,7 +24,10 @@ export function buildConceptRegistry(
             "ID",
         );
 
-        for (const alias of concept.aliases) {
+        for (
+            const alias of
+            getAllConceptAliases(concept)
+        ) {
             registerKey(
                 registry,
                 alias,
@@ -37,8 +46,11 @@ function registerKey(
     concept: Concept,
     keyType: string,
 ): void {
-    const normalizedKey = normalizeConceptKey(key);
-    const existingConcept = registry.get(normalizedKey);
+    const normalizedKey =
+        normalizeConceptKey(key);
+
+    const existingConcept =
+        registry.get(normalizedKey);
 
     if (
         existingConcept &&

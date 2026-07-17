@@ -1,6 +1,19 @@
-import { buildConceptRegistry } from "../builders/buildConceptRegistry";
-import { concepts } from "../loader/loadConcepts";
-import type { Concept } from "../models/Concept";
+import {
+    buildConceptRegistry,
+    normalizeConceptKey,
+} from "../builders/buildConceptRegistry";
+
+import {
+    concepts,
+} from "../loader/loadConcepts";
+
+import {
+    getAllConceptAliases,
+} from "../models/Concept";
+
+import type {
+    Concept,
+} from "../models/Concept";
 
 export const conceptRegistry =
     buildConceptRegistry(concepts);
@@ -13,15 +26,10 @@ export function findConcept(
     );
 }
 
-export function getAllConceptIdentifiers(): string[] {
+export function getAllConceptIdentifiers():
+    string[] {
     return concepts.flatMap((concept) => [
         concept.id,
-        ...concept.aliases,
+        ...getAllConceptAliases(concept),
     ]);
-}
-
-function normalizeConceptKey(
-    value: string,
-): string {
-    return value.trim().toLowerCase();
 }

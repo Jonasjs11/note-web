@@ -280,6 +280,38 @@ export default function SimulationPlayer({
         };
     }, []);
 
+    useEffect(() => {
+        function handleThemeChange() {
+            const root = rootRef.current;
+            const graphics =
+                graphicsRef.current;
+
+            if (!root || !graphics) {
+                return;
+            }
+
+            graphics.setPalette(
+                readSimulationPalette(root),
+            );
+
+            setCanvasRevision(
+                (revision) => revision + 1,
+            );
+        }
+
+        window.addEventListener(
+            "note-web:theme-change",
+            handleThemeChange,
+        );
+
+        return () => {
+            window.removeEventListener(
+                "note-web:theme-change",
+                handleThemeChange,
+            );
+        };
+    }, []);
+
     useLayoutEffect(() => {
         if (
             !definition ||
