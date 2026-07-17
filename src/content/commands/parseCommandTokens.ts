@@ -5,9 +5,7 @@ import {
 } from "./CommandToken";
 
 import type {
-    CommandNode,
     DocumentNode,
-    TextNode,
 } from "./DocumentNode";
 
 export function parseCommandTokens(
@@ -89,28 +87,4 @@ export function parseCommandTokens(
     }
 
     return nodes;
-}
-
-function parseCommandToken(
-    token: string,
-): CommandNode {
-
-    const fields =
-        token.split("|");
-
-    return {
-
-        type: "command",
-
-        command:
-            fields[0],
-
-        arguments:
-            fields
-                .slice(1)
-                .map(
-                    decodeURIComponent,
-                ),
-
-    };
 }

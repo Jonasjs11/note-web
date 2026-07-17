@@ -123,10 +123,16 @@ export function compileMathExpression(
 class MathExpressionParser {
     private currentIndex = 0;
 
+    private readonly tokens: Token[];
+    private readonly variable: string;
+
     constructor(
-        private readonly tokens: Token[],
-        private readonly variable: string,
-    ) {}
+        tokens: Token[],
+        variable: string,
+    ) {
+        this.tokens = tokens;
+        this.variable = variable;
+    }
 
     parse(): MathEvaluator {
         const evaluator =

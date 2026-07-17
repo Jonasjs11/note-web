@@ -1,12 +1,14 @@
 import type { DiagnosticResult } from "../models/Diagnostic";
 
+import type { SourceTransformContext } from "./Transformer";
+
 import {
     transformEquationNumbers,
 } from "./transformEquationNumbers";
 
 export function transformLatexSyntax(
     source: string,
-    filePath: string,
+    _filePath: string,
     context: SourceTransformContext,
 ): DiagnosticResult<string> {
     let transformedSource = source;

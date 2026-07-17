@@ -3,9 +3,7 @@ import {
     useRef,
 } from "react";
 
-import type {
-    ElementType,
-} from "react";
+import type { ElementType } from "react";
 
 import rehypeMathjax from "rehype-mathjax/browser";
 import Markdown from "react-markdown";
@@ -42,6 +40,14 @@ interface MarkdownViewProps {
     components?: Components;
 }
 
+const rootRef =
+    useRef<HTMLElement | null>(null);
+
+function setRootRef(
+    element: HTMLElement | null,
+): void {
+    rootRef.current = element;
+}
 export default function MarkdownView({
     source,
     className,
@@ -64,19 +70,30 @@ export default function MarkdownView({
     };
 
     useLayoutEffect(() => {
-        const root =
+        const currentRoot =
             rootRef.current;
 
-        const mathJax =
+        const currentMathJax =
             window.MathJax;
 
-        if (!root || !mathJax) {
+        if (
+            !currentRoot ||
+            !currentMathJax
+        ) {
             return;
         }
 
+        /*
+        * Stable aliases are used inside the asynchronous
+        * function so TypeScript knows they cannot become
+        * undefined or null.
+        */
+        const root = currentRoot;
+        const mathJax = currentMathJax;
+
         let cancelled = false;
 
-        async function renderMath() {
+        async function renderMath(): Promise<void> {
             try {
                 await mathJax.startup?.promise;
 
@@ -92,7 +109,7 @@ export default function MarkdownView({
             } catch (error: unknown) {
                 if (!cancelled) {
                     console.error(
-                        "MathJax failed to render Markdown.",
+                        "MathJax failed to render the document.",
                         error,
                     );
                 }
@@ -108,11 +125,13 @@ export default function MarkdownView({
                 root,
             ]);
         };
-    }, [source]);
+    }, [
+        source,
+    ]);
 
     return (
         <Root
-            ref={rootRef}
+            ref={setRootRef}
             className={className}
         >
             <Markdown

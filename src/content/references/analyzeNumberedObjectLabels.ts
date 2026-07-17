@@ -2,7 +2,6 @@ import type { Diagnostic } from "../models/Diagnostic";
 
 import { getSourceLocation } from "../parser/getSourceLocation";
 
-import { createReferenceAnchor } from "./createReferenceAnchor";
 import type {
     ReferenceNumber,
     ReferenceTarget,
@@ -71,7 +70,7 @@ export function analyzeNumberedObjectLabels({
                 location: getSourceLocation(
                     completeSource,
                     objectStart +
-                        (extraLabel.index ?? 0),
+                        (extraLabel.startOffset ?? 0),
                 ),
             });
         }
