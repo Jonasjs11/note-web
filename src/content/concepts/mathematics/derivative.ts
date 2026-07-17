@@ -1,5 +1,8 @@
 import type { Concept } from "../../models/Concept";
 
+import illustration
+    from "../../assets/TreTrinsReglen.svg";
+
 const force: Concept = {
     id: "derivative",
     title: "Derivative",
@@ -30,7 +33,7 @@ Newton's second law states that the net force acting on an object equals its mas
 
     ],
 
-    illustration: "../src/content/assets/TreTrinsReglen.svg",
+    illustration: illustration,
 };
 
 export default force;

@@ -114,7 +114,7 @@ export function buildConceptPageSource(
                               ).translation.title
                             : formatTitle(id);
 
-                        return `- [${title}](/concepts/${id})`;
+                        return `- [${title}](#/concepts/${id})`;
                     })
                     .join("\n"),
             ].join("\n\n"),

@@ -26,7 +26,7 @@ export default defineConcept({
         },
     },
 
-    illustration: "../src/content/assets/physics/force.svg",
+    illustration: "physics/force.svg",
 
     prerequisites: [
     ],

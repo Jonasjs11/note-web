@@ -1,17 +1,21 @@
 import {
-    useEffect,
     useMemo,
-    useState,
 } from "react";
 
 import type {
     CSSProperties,
-    MouseEvent,
 } from "react";
+
+import {
+    useLocation,
+} from "react-router-dom";
 
 import type {
     Section,
 } from "../../content/references/Section";
+
+import DocumentAnchorLink
+    from "../DocumentAnchorLink";
 
 import "./SiteContents.css";
 
@@ -22,10 +26,25 @@ interface SiteContentsProps {
 export default function SiteContents({
     sections,
 }: SiteContentsProps) {
-    const [activeAnchorId, setActiveAnchorId] =
-        useState<string | undefined>(() => {
-            return readAnchorFromHash();
-        });
+    const location = useLocation();
+
+    /*
+     * With createHashRouter, React Router separates
+     * the route pathname from the document anchor.
+     *
+     * For:
+     * #/physics/forces#sec-forces
+     *
+     * location.pathname is:
+     * /physics/forces
+     *
+     * location.hash is:
+     * #sec-forces
+     */
+    const activeAnchorId =
+        readAnchorFromLocationHash(
+            location.hash,
+        );
 
     const minimumLevel = useMemo(() => {
         if (sections.length === 0) {
@@ -37,72 +56,12 @@ export default function SiteContents({
                 (section) => section.level,
             ),
         );
-    }, [sections]);
-
-    useEffect(() => {
-        function handleHashChange() {
-            setActiveAnchorId(
-                readAnchorFromHash(),
-            );
-        }
-
-        window.addEventListener(
-            "hashchange",
-            handleHashChange,
-        );
-
-        handleHashChange();
-
-        return () => {
-            window.removeEventListener(
-                "hashchange",
-                handleHashChange,
-            );
-        };
-    }, []);
+    }, [
+        sections,
+    ]);
 
     if (sections.length === 0) {
         return null;
-    }
-
-    function handleSectionClick(
-        event: MouseEvent<HTMLAnchorElement>,
-        section: Section,
-    ) {
-        event.preventDefault();
-
-        const target = document.getElementById(
-            section.anchorId,
-        );
-
-        if (!target) {
-            return;
-        }
-
-        target.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-        });
-
-        const nextHash = `#${section.anchorId}`;
-
-        if (window.location.hash === nextHash) {
-            window.history.replaceState(
-                null,
-                "",
-                nextHash,
-            );
-        } else {
-            window.history.pushState(
-                null,
-                "",
-                nextHash,
-            );
-        }
-
-        setActiveAnchorId(
-            section.anchorId,
-        );
     }
 
     return (
@@ -133,8 +92,10 @@ export default function SiteContents({
                                     depth,
                             } as CSSProperties}
                         >
-                            <a
-                                href={`#${section.anchorId}`}
+                            <DocumentAnchorLink
+                                anchorId={
+                                    section.anchorId
+                                }
                                 className={
                                     isActive
                                         ? "site-contents__link site-contents__link--active"
@@ -145,15 +106,11 @@ export default function SiteContents({
                                         ? "location"
                                         : undefined
                                 }
-                                onClick={(event) => {
-                                    handleSectionClick(
-                                        event,
-                                        section,
-                                    );
-                                }}
                             >
-                                {section.displayText}
-                            </a>
+                                {
+                                    section.displayText
+                                }
+                            </DocumentAnchorLink>
                         </li>
                     );
                 })}
@@ -162,24 +119,21 @@ export default function SiteContents({
     );
 }
 
-function readAnchorFromHash():
-    | string
-    | undefined {
-    if (typeof window === "undefined") {
-        return undefined;
-    }
+function readAnchorFromLocationHash(
+    hash: string,
+): string | undefined {
+    const normalizedHash =
+        hash.replace(/^#+/, "");
 
-    const hash = window.location.hash;
-
-    if (!hash) {
+    if (!normalizedHash) {
         return undefined;
     }
 
     try {
         return decodeURIComponent(
-            hash.slice(1),
+            normalizedHash,
         );
     } catch {
-        return hash.slice(1);
+        return normalizedHash;
     }
 }

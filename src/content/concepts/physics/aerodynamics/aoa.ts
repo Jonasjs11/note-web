@@ -2,6 +2,9 @@ import {
     defineConcept,
 } from "../../../models/Concept";
 
+import illustration
+    from "../../../assets/aerodynamik/VingeprofilBegreber.svg";
+
 export default defineConcept({
     id: "aoa",
 
@@ -23,7 +26,7 @@ export default defineConcept({
         },
     },
 
-    illustration: "../src/content/assets/aerodynamik/VingeprofilBegreber.svg",
+    illustration: illustration,
 
     prerequisites: [
         "angle",

@@ -2,6 +2,9 @@ import {
     defineConcept,
 } from "../../../models/Concept";
 
+import illustration
+    from "../../../assets/aerodynamik/VingeprofilFLFD.svg";
+
 export default defineConcept({
     id: "drag",
 
@@ -23,7 +26,7 @@ export default defineConcept({
         },
     },
 
-    illustration: "../src/content/assets/aerodynamik/VingeprofilFLFD.svg",
+    illustration: illustration,
 
     prerequisites: [
         "force",

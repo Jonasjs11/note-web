@@ -1,5 +1,8 @@
 import type { Concept } from "../../models/Concept";
 
+import illustration
+    from "../../assets/physics/force.svg";
+
 const force: Concept = {
     id: "vector",
     title: "Vector",
@@ -30,7 +33,7 @@ Newton's second law states that the net force acting on an object equals its mas
 
     ],
 
-    illustration: "/illustrations/force.svg",
+    illustration: illustration,
 };
 
 export default force;

@@ -14,6 +14,8 @@ import type {
     CommandRenderer,
 } from "../CommandRenderer";
 
+import DocumentAnchorLink from "../../../components/DocumentAnchorLink";
+
 interface RenderTarget {
     type: ReferenceType;
     anchorId: string;
@@ -162,12 +164,12 @@ function renderSameNumberedType(
             );
 
         return (
-            <a
-                href={`#${targets[0].anchorId}`}
+            <DocumentAnchorLink
+                anchorId={targets[0].anchorId}
                 className="reference-link"
             >
                 {prefix} {targets[0].displayText}
-            </a>
+            </DocumentAnchorLink>
         );
     }
 
@@ -207,13 +209,13 @@ function renderMixedTarget(
         );
 
     return (
-        <a
+        <DocumentAnchorLink
             key={target.anchorId}
-            href={`#${target.anchorId}`}
+            anchorId={target.anchorId}
             className="reference-link"
         >
             {prefix} {target.displayText}
-        </a>
+        </DocumentAnchorLink>
     );
 }
 
@@ -222,16 +224,16 @@ function renderSectionLink(
     capitalize: boolean,
 ): ReactNode {
     return (
-        <a
+        <DocumentAnchorLink
             key={target.anchorId}
-            href={`#${target.anchorId}`}
+            anchorId={target.anchorId}
             className="reference-link reference-link--section"
         >
             {applyCapitalization(
                 target.displayText,
                 capitalize,
             )}
-        </a>
+        </DocumentAnchorLink>
     );
 }
 
@@ -239,13 +241,13 @@ function renderNumberLink(
     target: RenderTarget,
 ): ReactNode {
     return (
-        <a
+        <DocumentAnchorLink
             key={target.anchorId}
-            href={`#${target.anchorId}`}
+            anchorId={target.anchorId}
             className="reference-link"
         >
             {target.displayText}
-        </a>
+        </DocumentAnchorLink>
     );
 }
 

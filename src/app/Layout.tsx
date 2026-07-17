@@ -1,9 +1,11 @@
 import {
+    useEffect,
     useState,
 } from "react";
 
 import {
     Outlet,
+    useLocation,
 } from "react-router-dom";
 
 import type {
@@ -32,6 +34,67 @@ export default function Layout() {
         siteContentsSections,
         setSiteContentsSections,
     ] = useState<Section[]>([]);
+
+    const location = useLocation();
+
+    useEffect(() => {
+        if (!location.hash) {
+            return;
+        }
+
+        const anchorId =
+            decodeURIComponent(
+                location.hash.replace(/^#+/, ""),
+            );
+
+        let cancelled = false;
+        let attempt = 0;
+
+        function scrollToAnchor(): void {
+            if (cancelled) {
+                return;
+            }
+
+            const target =
+                document.getElementById(
+                    anchorId,
+                );
+
+            if (target) {
+                target.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                });
+
+                return;
+            }
+
+            /*
+            * MathJax equation anchors can be created
+            * shortly after the React page renders.
+            */
+            if (attempt < 20) {
+                attempt++;
+
+                window.setTimeout(
+                    scrollToAnchor,
+                    50,
+                );
+            }
+        }
+
+        window.setTimeout(
+            scrollToAnchor,
+            0,
+        );
+
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        location.pathname,
+        location.hash,
+    ]);
 
     return (
         <SubjectProvider>
