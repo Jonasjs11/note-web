@@ -21,8 +21,15 @@ import type {
 export default function Note() {
     const location = useLocation();
 
+    const pathname = decodeURI(
+        location.pathname,
+    ).normalize("NFC");
+
     const note = notes.find((candidate) => {
-        return candidate.url === location.pathname;
+        return (
+            candidate.url.normalize("NFC") ===
+            pathname
+        );
     });
 
     const {
