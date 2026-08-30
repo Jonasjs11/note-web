@@ -15,7 +15,6 @@ export interface CommandTokenData {
 
 export type DecodedCommandToken =
     CommandTokenData;
-
 export function encodeCommandToken(
     command: string,
     arguments_: string[],
@@ -35,7 +34,6 @@ export function decodeCommandToken(
     token: string,
 ): DecodedCommandToken {
     const fields = token.split("|");
-
     return {
         command: fields[0],
         arguments: fields
@@ -64,7 +62,6 @@ export interface ReferenceTokenTarget {
     anchorId: string;
     displayText: string;
 }
-
 export interface ReferenceCommandData {
     capitalize: boolean;
     targets: ReferenceTokenTarget[];
@@ -88,7 +85,6 @@ export function createReferenceToken(
     );
 }
 
-
 export function createSectionAnchorToken(
     anchorId: string,
 ): string {
@@ -107,6 +103,31 @@ export function createSimulationToken(
     );
 }
 
+export interface CalculatorCommandData {
+    source: string;
+    precision: number;
+    defaultFormat: "decimal" | "scientific";
+    preview: boolean;
+    defaultAngleMode: "radians" | "degrees";
+    angleLocked: boolean;
+}
+
+export function createCalculatorToken(
+    data: CalculatorCommandData,
+): string {
+    return encodeCommandToken(
+        "calculator",
+        [
+            data.source,
+            data.precision.toString(),
+            data.defaultFormat,
+            data.preview ? "true" : "false",
+            data.defaultAngleMode,
+            data.angleLocked ? "true" : "false",
+        ],
+    );
+}
+
 export interface FigureSubfigureCommandData {
     imageUrl?: string;
     imagePath: string;
@@ -114,7 +135,6 @@ export interface FigureSubfigureCommandData {
     caption?: string;
     letter: string;
     anchorId: string;
-
     width?: string;
     imageWidth?: string;
 
@@ -137,7 +157,6 @@ export interface FigureCommandData {
     subfigures?: FigureSubfigureCommandData[];
     subfigureGap?: string;
 }
-
 export function createFigureToken(
     data: FigureCommandData,
 ): string {
@@ -170,7 +189,6 @@ export interface TableCommandData {
     sourceUrl?: string;
     sourceSiteName?: string;
 }
-
 export function createTableToken(
     data: TableCommandData,
 ): string {

@@ -22,7 +22,6 @@ import {
 import type {
     ReferenceTarget,
 } from "../references/ReferenceTarget";
-
 import type {
     Section,
 } from "../references/Section";
@@ -46,7 +45,6 @@ import {
 import {
     transformSectionHeadings,
 } from "./transformSectionHeadings";
-
 import {
     transformSimulationCommands,
 } from "./transformSimulationCommands";
@@ -54,6 +52,10 @@ import {
 import {
     transformTableEnvironments,
 } from "./transformTableEnvironments";
+
+import {
+    transformCalculatorEnvironments,
+} from "./transformCalculatorEnvironments";
 
 import type {
     SourceTransformer,
@@ -65,15 +67,14 @@ const transformers: SourceTransformer[] = [
      * exact source inspected by analyzeSectionTargets().
      */
     transformSectionHeadings,
-
     transformConceptCommands,
     transformReferenceCommands,
     transformSimulationCommands,
     transformFigureEnvironments,
     transformTableEnvironments,
+    transformCalculatorEnvironments,
     transformLatexSyntax,
 ];
-
 export function transformSource(
     source: string,
     filePath: string,
@@ -90,7 +91,6 @@ export function transformSource(
     const context = {
         referenceRegistry:
             new ReferenceRegistry(references),
-
         numberedEquations,
         numberedFigures,
         numberedTables,
