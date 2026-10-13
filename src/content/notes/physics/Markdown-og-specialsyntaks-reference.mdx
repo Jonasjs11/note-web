@@ -1,0 +1,350 @@
+# Markdown og specialsyntaks – reference
+
+Denne side er en skrive- og visningsreference til **note-web**. Eksemplerne nedenfor er skrevet, så de fleste selv bliver vist på siden. Når syntaks skal vises bogstaveligt, bruges kodeblokke. Projektet læser `.mdx` som rå Markdown gennem `react-markdown` – det er **ikke** almindelig JSX/MDX-kompilering.
+
+## 1. Overskrifter
+
+Brug én `#`-overskrift som notens titel. De øvrige overskrifter er underafsnit.
+
+### Tredje niveau
+
+#### Fjerde niveau
+
+##### Femte niveau
+
+###### Sjette niveau
+
+```md
+# Notens titel
+## Afsnit
+### Underafsnit
+#### Mindre underafsnit
+##### Niveau fem
+###### Niveau seks
+```
+
+## 2. Afsnit og linjeskift
+
+Denne tekst står på én kildelinje.
+Denne tekst står på den næste kildelinje, men det er stadig **samme afsnit** (soft break).
+
+Denne tekst kommer efter en tom linje, altså et nyt afsnit.
+
+Denne linje slutter med en backslash\
+og får derfor et rigtigt linjeskift uden nyt afsnit.
+
+```md
+To linjer
+uden synligt tvungent linjeskift.
+
+Et nyt afsnit efter en tom linje.
+
+Tvunget linjeskift\
+på næste linje.
+
+Alternativ: to faktiske mellemrum ved linjens slutning.
+```
+
+Bemærk: `&#x20;` er blot et mellemrum og gør **ikke** et blødt linjeskift til et hårdt linjeskift.
+
+## 3. Fremhævning og typografi
+
+*Dette er kursiv*, **dette er fed**, ***dette er fed kursiv*** og ~~dette er gennemstreget~~.
+
+`Kode eller en variabel` vises med monospace.
+
+Du kan skrive bogstavelige specialtegn ved at escape dem: \*ikke kursiv\*, \# ikke en overskrift.
+
+```md
+*Kursiv*  **Fed**  ***Fed kursiv***  ~~Gennemstreget~~
+`Inline kode`
+\*Bogstavelige stjerner\*
+```
+
+## 4. Lister
+
+- Punkt A
+- Punkt B
+  - Underpunkt B.1
+  - Underpunkt B.2
+- Punkt C
+
+1. Første trin
+2. Andet trin
+3. Tredje trin
+
+- [x] Færdig opgave
+- [ ] Ikke færdig opgave
+
+```md
+- Punkt
+  - Underpunkt
+
+1. Første
+2. Andet
+
+- [x] Færdig
+- [ ] Mangler
+```
+
+## 5. Citater og vandrette streger
+
+> Dette er et citat.
+>
+> Det kan indeholde flere afsnit og **formatering**.
+
+---
+
+```md
+> Et citat
+>
+> Et nyt afsnit i citatet
+
+---
+```
+
+## 6. Links, billeder og fodnoter
+
+Et almindeligt link: [CommonMark](https://commonmark.org/).
+
+Et automatisk link: <https://example.com>.
+
+Et billede fra en HTTP-adresse (ekstern billedkilde):
+
+![Eksempelbillede](https://placehold.co/400x120/png?text=Markdown+billede)
+
+En fodnote til en sætning.[^demo-fodnote]
+
+[^demo-fodnote]: Dette er fodnotens indhold. Fodnoter understøttes af `remark-gfm`.
+
+```md
+[Beskrivende linktekst](https://example.com)
+![Alternativ billedtekst](https://example.com/image.png)
+En sætning med en fodnote.[^note]
+
+[^note]: Selve fodnoteteksten.
+```
+
+## 7. Almindelige Markdown-tabeller (GFM)
+
+| Venstre | Centreret | Højre |
+|:--------|:---------:|------:|
+| A       | B         | 123   |
+| C       | D         | 456   |
+
+I en almindelig tabel har `|` en særlig betydning som celleseparator; skriv `\|` for et bogstaveligt pipe-tegn.
+
+## 8. Kodeblokke
+
+```python
+# Syntax highlighting afhænger af websitets renderer og styling.
+def square(x):
+    return x * x
+
+print(square(4))
+```
+
+~~~js
+const speed = 12;
+console.log(speed);
+~~~
+
+Indryk eller omgiv kode med tre backticks (```), eventuelt med sprognavn. Du kan også bruge tre tilder (`~~~`).
+
+## 9. Matematik (LaTeX / MathJax)
+
+Inline matematik: $E = mc^2$, $\vec v = \vec v_1+\vec v_2$, $\frac{a}{b}$.
+
+Display-matematik med dobbelte dollartegn:
+
+$$
+\int_0^1 x^2\,dx = \frac13
+$$
+
+Projektets transformer understøtter også `\[ ... \]`:
+
+\[
+\sum_{k=1}^{n} k = \frac{n(n+1)}{2}
+\]
+
+### Nummereret ligning med label
+
+\begin{equation}
+F = ma
+\label{eq:newton-demo}
+\end{equation}
+
+Se \cref{eq:newton-demo}. Et reference-link med stort begyndelsesbogstav skrives \Cref{eq:newton-demo}.
+
+### Align med flere ligningslinjer
+
+\begin{align}
+v &= v_0 + at \label{eq:velocity-demo} \\
+s &= v_0t + \frac12 at^2 \label{eq:distance-demo}
+\end{align}
+
+Se \cref{eq:velocity-demo,eq:distance-demo}.
+
+### Subequations
+
+\begin{subequations}
+\begin{equation}
+a^2+b^2=c^2 \label{eq:pythagoras-demo}
+\end{equation}
+\begin{equation}
+c=\sqrt{a^2+b^2} \label{eq:pythagoras-solved-demo}
+\end{equation}
+\end{subequations}
+
+Se \cref{eq:pythagoras-demo,eq:pythagoras-solved-demo}.
+
+## 10. Afsnitsreferencer
+
+Overskrifter fra `##` til `######` kan få afsnitsankre. Tilføj et eksplicit `\label{...}` i overskriften, hvis du vil referere til den.
+
+### Eksempelafsnit \label{sec:eksempel-demo}
+
+Her står teksten i afsnittet. Se \cref{sec:eksempel-demo}.
+
+## 11. Figur med billedtekst, nummer og kilde
+
+Den følgende figur bruger en HTTP-billedadresse og behøver derfor ikke et lokalt registreret billedasset.
+
+\begin{figure}
+\includegraphics[width=70%]{https://placehold.co/600x240/png?text=Eksempelfigur}
+\caption{En eksempelillustration med automatisk figurnummer.}
+\label{fig:demo}
+\source{https://placehold.co}[Placehold]
+\end{figure}
+
+Se \cref{fig:demo}.
+
+## 12. Figur med underfigurer
+
+\begin{figure}
+\subfiguregap{12px}
+\begin{subfigure}{45%}
+\includegraphics[width=100%]{https://placehold.co/300x180/png?text=A}
+\caption{Venstre illustration.}
+\label{fig:demo-left}
+\end{subfigure}
+\begin{subfigure}{45%}
+\includegraphics[width=100%]{https://placehold.co/300x180/png?text=B}
+\caption{Højre illustration.}
+\label{fig:demo-right}
+\end{subfigure}
+\caption{En figur bestående af to underfigurer.}
+\label{fig:demo-pair}
+\end{figure}
+
+Se \cref{fig:demo-pair,fig:demo-left,fig:demo-right}.
+
+## 13. Nummereret tabel med billedtekst og reference
+
+\begin{table}
+\caption{Målinger fra et fiktivt forsøg.}
+\label{tab:demo}
+\source{https://example.com}[Example]
+
+| Tid (s) | Hastighed (m/s) |
+|--------:|----------------:|
+| 0       | 0               |
+| 1       | 2               |
+| 2       | 4               |
+
+\end{table}
+
+Se \cref{tab:demo}. Almindelige Markdown-tabeller ovenfor er derimod ikke automatisk refererbare som nummererede tabelmiljøer.
+
+## 14. Interaktiv lommeregner
+
+En tom lommeregner:
+
+\begin{calculator}
+\end{calculator}
+
+En lommeregner med foruddefineret formel (variabler i firkantede parenteser):
+
+\begin{calculator}[precision=4,format=decimal,preview=true]
+F = [m]*[a]
+\end{calculator}
+
+Mulige indstillinger er `precision=1` til `15`, `format=decimal` eller `scientific`, `preview=true/false`, `angle=rad/deg` og `angle-lock=true/false`.
+
+Eksempel med vinkelindstilling:
+
+\begin{calculator}[precision=6,angle=deg,angle-lock=true]
+y = sin([theta])
+\end{calculator}
+
+Mulige funktioner omfatter `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `sqrt`, `abs`, `exp`, `ln`, `log`, `floor`, `ceil`, `round`, `min`, `max` og `pow`. Konstanter inkluderer `pi` og `e`. Calculator-syntaks er ikke vilkårlig JavaScript.
+
+## 15. Koncept-links (specialsyntaks)
+
+Kommandoerne er:
+
+```text
+\concept{CONCEPT_ID}
+\concept{CONCEPT_ID}[Synlig alternativ tekst]
+```
+
+Et ID skal allerede være registreret i projektets concept-registry. Udskift derfor `CONCEPT_ID` med et faktisk registreret ID, før du flytter kommandoen uden for kodeblokken. En ukendt concept-id giver en diagnostic.
+
+## 16. Interaktive simulationer (specialsyntaks)
+
+```text
+\simulation{REGISTERED_SIMULATION_ID}
+```
+
+Simulationens ID skal svare til en mappe `src/simulations/definitions/ID/simulation.ts` og være lowercase med bindestreger. Indsæt en virkelig registreret ID for at vise en simulation. Kommandoen bliver til en særskilt blok.
+
+## 17. Krydsreferencer – oversigt
+
+```text
+\label{eq:navn}               (i et understøttet ligningsmiljø)
+\label{fig:navn}              (i et figure-miljø)
+\label{tab:navn}              (i et table-miljø)
+## Overskrift \label{sec:navn}
+
+\cref{eq:navn}
+\Cref{fig:navn}
+\cref{fig:navn,tab:navn}
+```
+
+Referencerne skal pege på **labels i samme note**, da den aktuelle registry opbygges fra den enkelte fil. Brug unikke labels på tværs af afsnit, figurer, tabeller og ligninger.
+
+## 18. Ting, der ikke fungerer som fuld MDX
+
+- JSX-komponenter som `MyComponent` med JSX-tag-syntaks bliver ikke fortolket som React-komponenter i disse noter.
+- Rå HTML i teksten bliver sprunget over, fordi `MarkdownView` bruger `skipHtml`. Brug Markdown i stedet for HTML-tags til linjeskift.
+- Et enkelt Enter skaber normalt ikke et synligt linjeskift; brug backslash eller et nyt afsnit.
+- `&#x20;` er et mellemrum, ikke en linjeskiftkode.
+- Ukendte koncept- eller simulations-ID'er kan ikke magisk oprettes via MDX-filen.
+
+## 19. Hurtig huskeliste
+
+| Formål | Syntaks |
+|:--|:--|
+| Titel | `# Titel` |
+| Afsnit | `## Overskrift` |
+| Nyt afsnit | En tom linje |
+| Linjeskift i afsnit | Backslash til sidst på linjen |
+| Fed skrift | `**fed**` |
+| Kursiv | `*kursiv*` |
+| Liste | `- punkt` |
+| Opgave | `- [ ] opgave` |
+| Link | `[tekst](https://example.com)` |
+| Billede | `![alt](https://example.com/billede.png)` |
+| Inline matematik | `$x^2$` |
+| Display-matematik | `$$` omkring formlen |
+| Nummereret ligning | `\begin{equation} ... \end{equation}` |
+| Reference | `\cref{label}` |
+| Figur | `\begin{figure} ... \end{figure}` |
+| Nummereret tabel | `\begin{table} ... \end{table}` |
+| Lommeregner | `\begin{calculator} ... \end{calculator}` |
+| Koncept | `\concept{id}` |
+| Simulation | `\simulation{id}` |
+
+---
+
+Denne reference er baseret på note-web-koden gennemgået den 13. oktober 2026. Hvis din projektkode ændrer sig, kan nogle eksempler kræve tilpasning.
