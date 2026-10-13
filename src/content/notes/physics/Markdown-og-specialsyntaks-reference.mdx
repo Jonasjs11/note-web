@@ -14,14 +14,7 @@ Brug én `#`-overskrift som notens titel. De øvrige overskrifter er underafsnit
 
 ###### Sjette niveau
 
-```md
-# Notens titel
-## Afsnit
-### Underafsnit
-#### Mindre underafsnit
-##### Niveau fem
-###### Niveau seks
-```
+Eksempel på overskriftsniveauer: `#` til notens titel, `##` til hovedafsnit og `###`–`######` til underafsnit. Skriv mellemrum efter antal `#`.
 
 ## 2. Afsnit og linjeskift
 
@@ -137,7 +130,7 @@ I en almindelig tabel har `|` en særlig betydning som celleseparator; skriv `\|
 ## 8. Kodeblokke
 
 ```python
-# Syntax highlighting afhænger af websitets renderer og styling.
+"""Syntax highlighting afhænger af websitets renderer og styling."""
 def square(x):
     return x * x
 
@@ -337,14 +330,14 @@ Referencerne skal pege på **labels i samme note**, da den aktuelle registry opb
 | Billede | `![alt](https://example.com/billede.png)` |
 | Inline matematik | `$x^2$` |
 | Display-matematik | `$$` omkring formlen |
-| Nummereret ligning | `\begin{equation} ... \end{equation}` |
+| Nummereret ligning | Se afsnit 9 |
 | Reference | `\cref{label}` |
-| Figur | `\begin{figure} ... \end{figure}` |
-| Nummereret tabel | `\begin{table} ... \end{table}` |
-| Lommeregner | `\begin{calculator} ... \end{calculator}` |
+| Figur | Se afsnit 11–12 |
+| Nummereret tabel | Se afsnit 13 |
+| Lommeregner | Se afsnit 14 |
 | Koncept | `\concept{id}` |
 | Simulation | `\simulation{id}` |
 
 ---
 
-Denne reference er baseret på note-web-koden gennemgået den 13. oktober 2026. Hvis din projektkode ændrer sig, kan nogle eksempler kræve tilpasning.
+Denne reference er baseret på note-web-koden gennemgået den 13. oktober 2026. Undgå at skrive et helt specialmiljø (fra startkommando til slutkommando) inde i en tabelcelle eller kodeeksempel: visse af projektets parsere genkender disse kommandoer selv dér. Hvis din projektkode ændrer sig, kan nogle eksempler kræve tilpasning.
