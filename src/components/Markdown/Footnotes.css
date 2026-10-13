@@ -1,0 +1,49 @@
+/* Footnote references remain ordinary accessible links. */
+.markdown [data-footnote-ref] {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.markdown [data-footnote-ref]:hover,
+.markdown [data-footnote-ref]:focus-visible {
+    text-decoration: underline;
+}
+
+/* Keep the scrolled-to definition clear of the top of the viewport. */
+.markdown [id^="user-content-fn-"] {
+    scroll-margin-top: 1.5rem;
+}
+
+.footnote-preview {
+    display: block;
+    position: fixed;
+    z-index: 1000;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(24rem, calc(100vw - 24px));
+    max-height: min(16rem, 45vh);
+    overflow: auto;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 0.5rem;
+    background: var(--code-block-background);
+    color: var(--text-primary);
+    box-shadow: 0 6px 22px rgb(0 0 0 / 18%);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+}
+
+.footnote-preview--above {
+    transform: translate(-50%, -100%);
+}
+
+.footnote-preview--below {
+    transform: translate(-50%, 0);
+}
+
+@media (hover: none) {
+    .footnote-preview { display: none; }
+}
