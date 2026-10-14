@@ -156,6 +156,8 @@ export interface FigureCommandData {
 
     subfigures?: FigureSubfigureCommandData[];
     subfigureGap?: string;
+    pdfview?: boolean;
+    pdfHeight?: string;
 }
 export function createFigureToken(
     data: FigureCommandData,
@@ -175,6 +177,8 @@ export function createFigureToken(
                 data.subfigures ?? [],
             ),
             data.subfigureGap ?? "",
+            data.pdfview ? "pdfview" : "",
+            data.pdfHeight ?? "",
         ],
     );
 }

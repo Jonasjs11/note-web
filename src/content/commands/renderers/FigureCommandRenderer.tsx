@@ -13,6 +13,8 @@ import {
     getSourceHostname,
 } from "../../sources/getSourceHostName";
 
+import FigurePdfViewer from "../../../components/Figures/FigurePdfViewer";
+
 import FigureImage
     from "../../../components/Figures/FigureImage";
 
@@ -58,6 +60,8 @@ const FigureCommandRenderer:
 
             const subfigureGap =
                 arguments_[9];
+            const pdfview = arguments_[10] === "pdfview";
+            const pdfHeight = arguments_[11] || undefined;
 
             if (
                 !number ||
@@ -170,6 +174,13 @@ const FigureCommandRenderer:
                                 ),
                             )}
                         </div>
+                    ) : imageUrl && pdfview ? (
+                        <FigurePdfViewer
+                            url={imageUrl}
+                            width={width || undefined}
+                            height={pdfHeight}
+                            title={caption || `Figure ${number}`}
+                        />
                     ) : imageUrl ? (
                         <FigureImage
                             imageUrl={imageUrl}

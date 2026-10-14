@@ -130,6 +130,9 @@ function transformFiguresInText(
                       outerFigureContent,
                   );
 
+            const pdfOptions = hasSubfigures
+                ? { pdfview: false, pdfHeight: undefined }
+                : extractPdfOptions(outerFigureContent);
             const imageUrl =
                 resolveImageUrl(imagePath);
 
@@ -175,6 +178,8 @@ function transformFiguresInText(
                             .sourceReference
                             ?.siteName,
                     subfigures,
+                    pdfview: pdfOptions.pdfview,
+                    pdfHeight: pdfOptions.pdfHeight,
                     subfigureGap:
                         numberedFigure
                             .subfigureGap,
@@ -279,6 +284,17 @@ function extractImagePath(
     return path || undefined;
 }
 
+function extractPdfOptions(content: string): { pdfview: boolean; pdfHeight?: string } {
+    const options = content.match(/\\includegraphics(?:\[([^\]]*)\])?\{[^{}]*\}/)?.[1];
+    if (!options) return { pdfview: false };
+    const tokens = options.split(",").map((token) => token.trim());
+    const pdfview = tokens.includes("pdfview");
+    const heightOption = tokens.find((token) => token.startsWith("height="));
+    const requestedHeight = heightOption?.slice("height=".length).trim();
+    const pdfHeight = requestedHeight && /^(?:[0-9]+(?:\.[0-9]+)?)(?:vh|dvh|px|rem|em|%)$/.test(requestedHeight)
+        ? requestedHeight : undefined;
+    return { pdfview, pdfHeight };
+}
 function extractCaption(
     figureContent: string,
 ): string | undefined {
