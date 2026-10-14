@@ -1,0 +1,8 @@
+.note-pdf-viewer { display: flex; flex-direction: column; max-width: 100%; min-height: 20rem; border: 1px solid var(--border-color, #aaa); border-radius: .4rem; overflow: hidden; background: var(--surface, #fff); }
+.note-pdf-viewer__toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; padding: .45rem .65rem; border-bottom: 1px solid #aaa5; font-size: .85rem; }
+.note-pdf-viewer__title { flex: 1 1 8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-pdf-viewer__toolbar a, .note-pdf-viewer__toolbar button { font: inherit; white-space: nowrap; }
+.note-pdf-viewer__toolbar button { cursor: pointer; }
+.note-pdf-viewer__frame { flex: 1 1 auto; width: 100%; min-height: 0; border: 0; background: white; }
+.note-pdf-viewer__hint { padding: .25rem .65rem; font-size: .72rem; opacity: .75; }
+.note-pdf-viewer--expanded { position: fixed; inset: 0; z-index: 9999; width: 100vw; height: 100dvh; max-width: none; border-radius: 0; }
