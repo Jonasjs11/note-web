@@ -47,3 +47,15 @@
 @media (hover: none) {
     .footnote-preview { display: none; }
 }
+
+/* note-web backlink fix: keep footnote numbers and return arrows clean.
+   Covers normal, hover and keyboard-focus states; citation links are unchanged. */
+.markdown a[data-footnote-ref],
+.markdown a[data-footnote-ref]:hover,
+.markdown a[data-footnote-ref]:focus-visible,
+.markdown a[data-footnote-backref],
+.markdown a[data-footnote-backref]:hover,
+.markdown a[data-footnote-backref]:focus-visible {
+    text-decoration: none;
+    border-bottom: 0;
+}

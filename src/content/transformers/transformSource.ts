@@ -57,6 +57,9 @@ import {
     transformCalculatorEnvironments,
 } from "./transformCalculatorEnvironments";
 
+import { transformCitationCommands } from "./transformCitationCommands";
+
+import { transformFootnoteCommands } from "./transformFootnoteCommands";
 import type {
     SourceTransformer,
 } from "./Transformer";
@@ -69,11 +72,13 @@ const transformers: SourceTransformer[] = [
     transformSectionHeadings,
     transformConceptCommands,
     transformReferenceCommands,
+    transformCitationCommands,
     transformSimulationCommands,
     transformFigureEnvironments,
     transformTableEnvironments,
     transformCalculatorEnvironments,
     transformLatexSyntax,
+    transformFootnoteCommands,
 ];
 export function transformSource(
     source: string,

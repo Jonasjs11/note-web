@@ -12,8 +12,15 @@ import SectionAnchorCommandRenderer from "./renderers/SectionAnchorCommandRender
 import SimulationCommandRenderer from "./renderers/SimulationCommandRenderer";
 import CalculatorCommandRenderer from "./renderers/CalculatorCommandRenderer";
 
+import { WebsiteCitationRenderer, BibliographyCitationRenderer }
+    from "./renderers/CitationCommandRenderer";
+import BibliographyCommandRenderer from "./renderers/BibliographyCommandRenderer";
+
 export const commandRegistry =
     new Map<string, CommandRenderer>([
+        ["cite-url", WebsiteCitationRenderer],
+        ["cite-bib", BibliographyCitationRenderer],
+        ["bibliography", BibliographyCommandRenderer],
         [
             "concept",
             ConceptCommandRenderer,

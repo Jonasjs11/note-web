@@ -96,6 +96,7 @@ function convertTextNode(
     });
 }
 const blockCommands = new Set([
+    "bibliography",
     "figure",
     "table",
     "simulation",

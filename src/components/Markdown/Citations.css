@@ -1,0 +1,36 @@
+/* Citations share the regular note link color but remain visually distinct. */
+.markdown .citation-link {
+    color: var(--link-color);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+.markdown .citation-link:hover {
+    color: var(--link-hover);
+}
+.markdown .citation-link--website {
+    white-space: nowrap;
+}
+.markdown .citation-reference,
+.markdown .note-bibliography li {
+    scroll-margin-top: 5rem;
+}
+.markdown .note-bibliography {
+    margin-block: 2.5rem 1rem;
+}
+.markdown .note-bibliography ol {
+    padding-left: 2rem;
+    list-style-type: decimal;
+}
+.markdown .note-bibliography li {
+    padding-left: 0.25rem;
+    margin-block: 0.65rem;
+    overflow-wrap: anywhere;
+}
+.markdown .note-bibliography cite {
+    font-style: italic;
+}
+.markdown .note-bibliography__backlink {
+    margin-left: 0.25rem;
+    white-space: nowrap;
+    text-decoration: none;
+}

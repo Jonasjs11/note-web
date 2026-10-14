@@ -22,12 +22,15 @@ import type {
 
 import "./MarkdownRenderer.css";
 import "./Footnotes.css";
+import "./Citations.css";
 
 import CommandTokenComponent
     from "./CommandTokenComponent";
 
 import rehypeCommandTokens
     from "../../content/commands/rehypeCommandTokens";
+
+import rehypeEndmatterOrder from "../../content/footnotes/rehypeEndmatterOrder";
 
 const markdownComponents = {
     "command-token":
@@ -51,45 +54,78 @@ interface FootnotePreview {
     placement: "above" | "below";
 }
 
-/** GFM uses #user-content-fn-ID for definitions, and
- * #user-content-fnref-ID for the links back to references. */
-function isFootnoteHref(href: string | null): href is string {
-    return href !== null &&
+/**
+ * Footnotes use GFM anchors; numbered bibliography citations use React Router
+ * links. Both must scroll *within this MarkdownView*, not navigate the hash
+ * router. Never use document.getElementById here: concept previews and other
+ * MarkdownViews can repeat the same GFM IDs elsewhere on the page.
+ */
+function getManagedTargetId(link: HTMLAnchorElement): string | null {
+    const href = link.getAttribute("href");
+    if (!href) return null;
+
+    const hashIndex = href.lastIndexOf("#");
+    if (hashIndex < 0 || hashIndex === href.length - 1) return null;
+
+    let id: string;
+    try {
+        id = decodeURIComponent(href.slice(hashIndex + 1));
+    } catch {
+        return null;
+    }
+
+    const isFootnote =
+        link.hasAttribute("data-footnote-ref") ||
+        link.hasAttribute("data-footnote-backref") ||
         /^#user-content-fn(?:ref)?-/.test(href);
+
+    if (isFootnote && /^user-content-fn(?:ref)?-/.test(id)) {
+        return id;
+    }
+
+    const isBibliographyLink = link.matches(
+        ".citation-link--numbered, .note-bibliography__backlink",
+    );
+    if (isBibliographyLink && /^(?:bibliography-|citation-ref-)/.test(id)) {
+        return id;
+    }
+
+    return null;
+}
+
+function getManagedLink(
+    target: EventTarget | null,
+    root: HTMLElement | null,
+): HTMLAnchorElement | null {
+    if (!(target instanceof Element) || !root) return null;
+    const link = target.closest<HTMLAnchorElement>("a[href]");
+    return link && root.contains(link) && getManagedTargetId(link)
+        ? link : null;
 }
 
 function getFootnoteLink(
     target: EventTarget | null,
     root: HTMLElement | null,
 ): HTMLAnchorElement | null {
-    if (!(target instanceof Element) || !root) {
-        return null;
-    }
-
-    const link = target.closest<HTMLAnchorElement>("a[href]");
-    if (!link || !root.contains(link) ||
-        !isFootnoteHref(link.getAttribute("href"))) {
-        return null;
-    }
-    return link;
+    const link = getManagedLink(target, root);
+    const id = link ? getManagedTargetId(link) : null;
+    return id?.startsWith("user-content-fn") ? link : null;
 }
 
-function getFootnoteTarget(
+function getLocalTarget(
     link: HTMLAnchorElement,
     root: HTMLElement,
 ): HTMLElement | null {
-    const href = link.getAttribute("href");
-    if (!isFootnoteHref(href)) {
-        return null;
+    const id = getManagedTargetId(link);
+    if (!id) return null;
+    if (root.id === id) return root;
+
+    // Query IDs within the current rendered note. A global lookup can find
+    // an identically named ID in a tooltip or another MarkdownView first.
+    for (const node of Array.from(root.querySelectorAll<HTMLElement>("[id]"))) {
+        if (node.id === id) return node;
     }
-    let id: string;
-    try {
-        id = decodeURIComponent(href.slice(1));
-    } catch {
-        return null;
-    }
-    const target = document.getElementById(id);
-    return target && root.contains(target) ? target : null;
+    return null;
 }
 
 function getPreviewText(destination: HTMLElement): string {
@@ -117,17 +153,26 @@ export default function MarkdownView({
         rootRef.current = element;
     }
 
-    // A native fragment link would replace the hash-router path.
-    // Navigate by scrolling instead, preserving the current URL.
+    // Handle clicks in the *capture phase*. The bibliography uses React
+    // Router's Link component, whose own click handler runs before a bubbling
+    // handler on Root. Capture lets us prevent routing before Link navigates.
     function handleClick(event: ReactMouseEvent<HTMLElement>): void {
         const root = rootRef.current;
-        const link = getFootnoteLink(event.target, root);
+        const link = getManagedLink(event.target, root);
         if (!root || !link) return;
-        const destination = getFootnoteTarget(link, root);
-        if (!destination) return;
 
+        // Never allow a native #fragment to overwrite the hash-router URL.
         event.preventDefault();
         setPreview(null);
+
+        const destination = getLocalTarget(link, root);
+        if (!destination) {
+            console.warn(
+                "In-note citation/footnote target not found:",
+                getManagedTargetId(link),
+            );
+            return;
+        }
         destination.scrollIntoView({
             behavior: "smooth",
             block: "start",
@@ -141,7 +186,7 @@ export default function MarkdownView({
         // Only show previews for references pointing *to* a definition.
         // Back-reference arrows should just be clickable.
         if (!href?.startsWith("#user-content-fn-")) return;
-        const target = getFootnoteTarget(link, root);
+        const target = getLocalTarget(link, root);
         if (!target) return;
         const text = getPreviewText(target);
         if (!text) return;
@@ -229,7 +274,7 @@ export default function MarkdownView({
         <Root
             ref={setRootRef}
             className={className}
-            onClick={handleClick}
+            onClickCapture={handleClick}
             onMouseOver={handleMouseOver}
             onMouseOut={handleMouseOut}
             onFocusCapture={handleFocus}
@@ -240,7 +285,7 @@ export default function MarkdownView({
         >
             <Markdown
                 remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeCommandTokens, rehypeMathjax]}
+                rehypePlugins={[rehypeCommandTokens, rehypeEndmatterOrder, rehypeMathjax]}
                 components={mergedComponents}
                 skipHtml
             >
