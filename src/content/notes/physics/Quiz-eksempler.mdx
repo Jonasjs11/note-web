@@ -1,0 +1,66 @@
+# Quiz – eksempler
+
+## Navigation – flashcard-samling
+
+Én `quiz` indeholder her **fire** kort. Brug Previous/Next til at skifte kort og Reveal answer til at se svaret.
+
+\begin{quiz}[type=flashcard, title=Grundlæggende navigation]
+Q: Hvad betyder forkortelsen TAS?
+A: **True Airspeed**, flyets hastighed i forhold til luften.
+
+Q: Hvad er en storcirkel?
+A: Den største cirkel, der kan tegnes på en kugle. Dens buer er korteste veje på kuglen.
+
+Q: Hvad er forskellen på en storcirkel og en loxodrom?
+A: En **loxodrom** skærer alle meridianer under samme vinkel, mens en storcirkel følger en kuglegeodæt.
+
+Q: Hvad betyder $v = s/t$?
+A: Hastighed er strækning divideret med tid.
+\end{quiz}
+
+## Matematik – to variable
+
+\begin{quiz}[type=math, title=Summen af to størrelser, tolerance=0.01]
+Question: Beregn $c$, når $a={{a}}$ og $b={{b}}$, og $c=a+b$.
+
+a = 2..10 step 1
+b = 5..20 step 1
+
+answer = c = [a] + [b]
+\end{quiz}
+
+## Matematik – enhed til højre i feltet
+
+Den grå enhed er ikke en del af brugerens input. Her bruger vi LaTeX med `\\mathrm`.
+
+\begin{quiz}[type=math, title=Kinetisk energi, tolerance=0.05, unit=\mathrm{J}]
+Question: Beregn energien $E$ når $m={{m}}\,\mathrm{kg}$ og $v={{v}}\,\mathrm{m/s}$. Brug $E=\frac12 mv^2$.
+
+m = 1..10 step 0.5
+v = 2..20 step 2
+
+answer = E = 0.5 * [m] * [v]^2
+\end{quiz}
+
+## Matematik – tre variable
+
+Dette eksempel er også en kontrol af at både de viste værdier **og** facit bliver fornyet.
+
+\begin{quiz}[type=math, title=Tre variable, tolerance=0.01, unit=\mathrm{m\,s^{-1}}]
+Question: Beregn $R$, når $a={{a}}$, $b={{b}}$ og $c={{c}}$. Brug $R=ab+c$.
+
+a = 1..5 step 1
+b = 2..8 step 1
+c = -3..3 step 1
+
+answer = R = [a] * [b] + [c]
+\end{quiz}
+
+## Ingen titel
+
+Uden `title=...` vises ingen overskrift inde i quizkortet.
+
+\begin{quiz}[type=flashcard]
+Q: $2^3$?
+A: $8$.
+\end{quiz}

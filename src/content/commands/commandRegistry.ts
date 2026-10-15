@@ -11,6 +11,7 @@ import TableCommandRenderer from "./renderers/TableCommandRenderer";
 import SectionAnchorCommandRenderer from "./renderers/SectionAnchorCommandRenderer";
 import SimulationCommandRenderer from "./renderers/SimulationCommandRenderer";
 import CalculatorCommandRenderer from "./renderers/CalculatorCommandRenderer";
+import QuizCommandRenderer from "./renderers/QuizCommandRenderer";
 
 import { WebsiteCitationRenderer, BibliographyCitationRenderer }
     from "./renderers/CitationCommandRenderer";
@@ -48,5 +49,9 @@ export const commandRegistry =
         [
             "calculator",
             CalculatorCommandRenderer,
+        ],
+        [
+            "quiz",
+            QuizCommandRenderer,
         ],
     ]);

@@ -60,6 +60,9 @@ import {
 import { transformCitationCommands } from "./transformCitationCommands";
 
 import { transformFootnoteCommands } from "./transformFootnoteCommands";
+
+import { transformQuizEnvironments } from "./transformQuizEnvironments";
+
 import type {
     SourceTransformer,
 } from "./Transformer";
@@ -70,6 +73,7 @@ const transformers: SourceTransformer[] = [
      * exact source inspected by analyzeSectionTargets().
      */
     transformSectionHeadings,
+    transformQuizEnvironments,
     transformConceptCommands,
     transformReferenceCommands,
     transformCitationCommands,

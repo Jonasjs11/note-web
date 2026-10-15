@@ -100,6 +100,7 @@ const blockCommands = new Set([
     "figure",
     "table",
     "simulation",
+    "quiz",
 ]);
 
 function unwrapBlockCommandParagraphs(
