@@ -58,6 +58,8 @@ import {
 
 import "./SimulationPlayer.css";
 
+import { useUiTranslation } from "../../i18n/useUiTranslation";
+
 interface SimulationPlayerProps {
     simulationId: string;
 }
@@ -65,6 +67,8 @@ interface SimulationPlayerProps {
 export default function SimulationPlayer({
     simulationId,
 }: SimulationPlayerProps) {
+    const t = useUiTranslation();
+
     const rootRef =
         useRef<HTMLElement>(null);
 
@@ -724,10 +728,10 @@ export default function SimulationPlayer({
                             className="simulation-player__canvas"
                             aria-label={
                                 definition.description ??
-                                `${definition.title} simulation`
+                                t("simulation.canvasLabel", { title: definition.title })
                             }
                         >
-                            Your browser does not support Canvas 2D.
+                            {t("simulation.canvasUnsupported")}
                         </canvas>
                     </div>
 
@@ -765,8 +769,8 @@ export default function SimulationPlayer({
                             }}
                         >
                             {isPlaying
-                                ? "Pause"
-                                : "Play"}
+                                ? t("simulation.pause")
+                                : t("simulation.play")}
                         </button>
 
                         <button
@@ -774,7 +778,7 @@ export default function SimulationPlayer({
                             className="simulation-player__button"
                             onClick={handleReset}
                         >
-                            Reset
+                            {t("simulation.reset")}
                         </button>
                     </div>
 
@@ -814,8 +818,8 @@ export default function SimulationPlayer({
                         onClick={handleStart}
                     >
                         {loaderExists
-                            ? "Start simulation"
-                            : "Simulation unavailable"}
+                            ? t("simulation.start")
+                            : t("simulation.unavailable")}
                     </button>
                 </div>
             )}

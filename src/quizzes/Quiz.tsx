@@ -17,6 +17,7 @@ import type {
     QuizProblem,
 } from "./QuizDefinition";
 import "./Quiz.css";
+import { useUiTranslation } from "../i18n/useUiTranslation";
 
 interface QuizProps {
     type: string;
@@ -114,13 +115,14 @@ export default function Quiz({
     title = "",
     unit = "",
 }: QuizProps) {
+    const t = useUiTranslation();
     const parsed = useMemo(() => {
         try {
             return { definition: parseQuizDefinition(type, source, tolerance) };
         } catch (error: unknown) {
-            return { error: error instanceof Error ? error.message : "Invalid quiz" };
+            return { error: error instanceof Error ? error.message : t("quiz.invalid") };
         }
-    }, [type, source, tolerance]);
+    }, [type, source, tolerance, t]);
 
     if (!parsed.definition) {
         return <div className="quiz quiz--error" role="alert">{parsed.error}</div>;
@@ -144,6 +146,7 @@ function FlashcardQuiz({
     definition: FlashcardQuizDefinition;
     title: string;
 }) {
+    const t = useUiTranslation();
     const [index, setIndex] = useState(0);
     const [revealed, setRevealed] = useState(false);
     const card = definition.cards[index];
@@ -156,10 +159,10 @@ function FlashcardQuiz({
     }
 
     return (
-        <section className="quiz quiz--flashcards" aria-label={title || "Flashcards"}>
+        <section className="quiz quiz--flashcards" aria-label={title || t("quiz.flashcards")}>
             <QuizHeading title={title} />
             <div className="quiz__flashcard-progress" aria-live="polite">
-                Card {index + 1} of {definition.cards.length}
+                {t("quiz.progress", { current: index + 1, total: definition.cards.length })}
             </div>
             <div className={`quiz__flashcard-stage${revealed ? " quiz__flashcard-stage--flipped" : ""}`}>
                 <div className="quiz__flashcard-face" key={`${index}:${revealed}`} aria-live="polite">
@@ -169,15 +172,15 @@ function FlashcardQuiz({
             <div className="quiz__actions quiz__flashcard-controls">
                 <button type="button" className="quiz__button quiz__button--secondary"
                     onClick={() => changeCard(-1)} disabled={definition.cards.length === 1}>
-                    Previous
+                    {t("quiz.previous")}
                 </button>
                 <button type="button" className="quiz__button" aria-expanded={revealed}
                     onClick={() => setRevealed((previous) => !previous)}>
-                    {revealed ? "Show question" : "Reveal answer"}
+                    {revealed ? t("quiz.showQuestion") : t("quiz.reveal")}
                 </button>
                 <button type="button" className="quiz__button quiz__button--secondary"
                     onClick={() => changeCard(1)} disabled={definition.cards.length === 1}>
-                    Next
+                    {t("quiz.next")}
                 </button>
             </div>
         </section>
@@ -189,6 +192,7 @@ function MathQuiz({ definition, title, unit }: {
     title: string;
     unit: string;
 }) {
+    const t = useUiTranslation();
     const inputId = useId();
     const [problem, setProblem] = useState<QuizProblem>(() => generateMathProblem(definition));
     const [response, setResponse] = useState("");
@@ -207,7 +211,7 @@ function MathQuiz({ definition, title, unit }: {
     }
 
     return (
-        <section className="quiz quiz--math" aria-label={title || "Mathematics quiz"}>
+        <section className="quiz quiz--math" aria-label={title || t("quiz.math")}>
             <QuizHeading title={title} />
             {problem.status === "error" ? (
                 <div role="alert">{problem.message}</div>
@@ -220,33 +224,33 @@ function MathQuiz({ definition, title, unit }: {
                         event.preventDefault();
                         setChecked(true);
                     }}>
-                        <label className="quiz__label" htmlFor={inputId}>Your answer</label>
+                        <label className="quiz__label" htmlFor={inputId}>{t("quiz.yourAnswer")}</label>
                         <div className="quiz__input-wrap">
                             <input id={inputId} className="quiz__input" type="text" inputMode="decimal"
-                                value={response} placeholder="Enter a number"
+                                value={response} placeholder={t("quiz.enterNumber")}
                                 onChange={(event: ChangeEvent<HTMLInputElement>) => {
                                     setResponse(event.target.value);
                                     setChecked(false);
                                 }}
                                 autoComplete="off" />
                             {unit && (
-                                <span className="quiz__unit" aria-label={`Expected unit: ${unit}`}>
+                                <span className="quiz__unit" aria-label={t("quiz.expectedUnit", { unit })}>
                                     <QuizMarkdown source={`$${unit}$`} inline />
                                 </span>
                             )}
                         </div>
-                        <button type="submit" className="quiz__button">Check</button>
+                        <button type="submit" className="quiz__button">{t("quiz.check")}</button>
                     </form>
                     {checked && (
                         <p className={`quiz__feedback ${correct ? "quiz__feedback--correct" : ""}`}
                             role="status">
-                            {numericResponse.status !== "valid" ? "Enter a valid number."
-                                : correct ? "Correct!" : "Not quite. Try again."}
+                            {numericResponse.status !== "valid" ? t("quiz.invalidNumber")
+                                : correct ? t("quiz.correct") : t("quiz.retry")}
                         </p>
                     )}
                     {revealed && (
                         <p className="quiz__solution">
-                            Answer: {String(Number(problem.answer.toPrecision(12)))}
+                            {t("quiz.answer")}: {String(Number(problem.answer.toPrecision(12)))}
                             {unit && <> <span className="quiz__solution-unit">
                                 <QuizMarkdown source={`$${unit}$`} inline />
                             </span></>}
@@ -255,11 +259,11 @@ function MathQuiz({ definition, title, unit }: {
                     <div className="quiz__actions">
                         <button type="button" className="quiz__button quiz__button--secondary"
                             onClick={() => setRevealed((previous) => !previous)}>
-                            {revealed ? "Hide solution" : "Show solution"}
+                            {revealed ? t("quiz.hideSolution") : t("quiz.showSolution")}
                         </button>
                         <button type="button" className="quiz__button quiz__button--secondary"
                             onClick={regenerate} disabled={!canChangeValues}>
-                            New values
+                            {t("quiz.newValues")}
                         </button>
                     </div>
                 </>

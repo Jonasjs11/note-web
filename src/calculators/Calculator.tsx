@@ -28,6 +28,8 @@ import type {
 
 import "./Calculator.css";
 
+import { useUiTranslation } from "../i18n/useUiTranslation";
+
 export type CalculatorResultFormat =
     | "decimal"
     | "scientific";
@@ -49,6 +51,7 @@ export default function Calculator({
     defaultAngleMode = "radians",
     angleLocked = false,
 }: CalculatorProps) {
+    const t = useUiTranslation();
     const trimmedSource = source.trim();
     const definitionResult = useMemo(() => {
         if (!trimmedSource) {
@@ -67,7 +70,7 @@ export default function Calculator({
                 error:
                     error instanceof Error
                         ? error.message
-                        : "Invalid calculator formula.",
+                        : t("calculator.invalid"),
             };
         }
     }, [trimmedSource]);
@@ -122,6 +125,7 @@ function FormulaCalculator({
     definition: CalculatorDefinition;
     angleLocked: boolean;
 }) {
+    const t = useUiTranslation();
     const [inputs, setInputs] = useState<
         Record<string, string>
     >(() =>
@@ -302,8 +306,8 @@ function FormulaCalculator({
                     onAngleModeChange={setAngleMode}
                     angleLocked={angleLocked}
                     modeAction={{
-                        label: "Free",
-                        title: "Switch to a free calculator",
+                        label: t("calculator.free"),
+                        title: t("calculator.switchToFree"),
                         action: switchToFree,
                     }}
                 />
@@ -326,8 +330,8 @@ function FormulaCalculator({
                             : setAngleMode
                     }
                     modeAction={{
-                        label: "Formula",
-                        title: "Switch back to the predefined formula",
+                        label: t("calculator.formula"),
+                        title: t("calculator.switchToFormula"),
                         action: () => setMode("formula"),
                     }}
                 />
@@ -399,6 +403,7 @@ function FreeCalculator({
     onAngleModeChange?(mode: CalculatorAngleMode): void;
     modeAction?: ToolbarAction;
 }) {
+    const t = useUiTranslation();
     const [input, setInput] = useState("");
     const [resultFormat, setResultFormat] =
         useState<CalculatorResultFormat>(
@@ -508,8 +513,8 @@ function FreeCalculator({
                     onChange={(event: ChangeEvent<HTMLInputElement>) =>
                         setInput(event.target.value)
                     }
-                    placeholder="e.g. 2*pi*3^2 ="
-                    aria-label="Calculator expression"
+                    placeholder={t("calculator.expressionExample")}
+                    aria-label={t("calculator.expressionLabel")}
                     autoComplete="off"
                     autoCapitalize="off"
                     spellCheck={false}
@@ -536,37 +541,37 @@ function FreeCalculator({
                 insertActions={[
                     {
                         label: "a/b",
-                        title: "Insert fraction",
+                        title: t("calculator.insertFraction"),
                         action: () =>
                             insertSnippet("()/()", 1),
                     },
                     {
                         label: "xʸ",
-                        title: "Insert exponent",
+                        title: t("calculator.insertExponent"),
                         action: () =>
                             insertSnippet("^()", 2),
                     },
                     {
                         label: "√",
-                        title: "Insert square root",
+                        title: t("calculator.insertSquareRoot"),
                         action: () =>
                             insertSnippet("sqrt()", 5),
                     },
                     {
                         label: "π",
-                        title: "Insert pi",
+                        title: t("calculator.insertPi"),
                         action: () =>
                             insertSnippet("pi", 2),
                     },
                     {
                         label: "sin",
-                        title: "Insert sine",
+                        title: t("calculator.insertSine"),
                         action: () =>
                             insertSnippet("sin()", 4),
                     },
                     {
                         label: "ln",
-                        title: "Insert natural logarithm",
+                        title: t("calculator.insertNaturalLogarithm"),
                         action: () =>
                             insertSnippet("ln()", 3),
                     },
@@ -582,7 +587,7 @@ function FreeCalculator({
                     }
                 >
                     <span className="calculator__preview-label">
-                        Preview
+                        {t("calculator.preview")}
                     </span>
                     <span className="calculator__preview-math">
                         {previewLatex ? (
@@ -592,8 +597,8 @@ function FreeCalculator({
                         ) : (
                             <span className="calculator__preview-placeholder">
                                 {expressionSource
-                                    ? "Complete the expression to preview it."
-                                    : "Type an expression to preview it."}
+                                    ? t("calculator.previewIncomplete")
+                                    : t("calculator.previewEmpty")}
                             </span>
                         )}
                     </span>
@@ -603,13 +608,13 @@ function FreeCalculator({
                         aria-pressed={previewExpanded}
                         aria-label={
                             previewExpanded
-                                ? "Use compact preview"
-                                : "Enlarge preview"
+                                ? t("calculator.previewCompact")
+                                : t("calculator.previewExpand")
                         }
                         title={
                             previewExpanded
-                                ? "Use compact preview"
-                                : "Enlarge preview"
+                                ? t("calculator.previewCompact")
+                                : t("calculator.previewExpand")
                         }
                         onClick={() =>
                             setPreviewExpanded((value) => !value)
@@ -711,11 +716,15 @@ function MathJaxPreview({
         };
     }, [latex]);
 
+    const t = useUiTranslation();
+
     return (
         <span
             ref={rootRef}
             className="calculator__mathjax-preview"
-            aria-label={`Rendered expression: ${latex}`}
+            aria-label={t("calculator.renderedExpression", {
+                expression: latex,
+            })}
         />
     );
 }
@@ -958,6 +967,7 @@ function VariableField({
     editable: boolean;
     onChange(value: string): void;
 }) {
+    const t = useUiTranslation();
     return (
         <label
             className={
@@ -975,8 +985,8 @@ function VariableField({
                 }
                 aria-label={
                     editable
-                        ? `Expression for ${name}`
-                        : `Computed value for ${name}`
+                        ? t("calculator.expressionFor", { name })
+                        : t("calculator.computedFor", { name })
                 }
                 title={
                     !editable && value
@@ -1054,6 +1064,7 @@ function CalculatorToolbar({
     modeAction?: ToolbarAction;
     insertActions?: ToolbarAction[];
 }) {
+    const t = useUiTranslation();
     return (
         <div className="calculator-toolbar">
             <div className="calculator-toolbar__insert">
@@ -1080,7 +1091,7 @@ function CalculatorToolbar({
                             onPreviewChange(!preview)
                         }
                     >
-                        Preview
+                        {t("calculator.preview")}
                     </button>
                 )}
                 <div
@@ -1091,8 +1102,8 @@ function CalculatorToolbar({
                     }
                     aria-label={
                         angleLocked
-                            ? "Angle mode, locked by the note author"
-                            : "Angle mode"
+                            ? t("calculator.angleLocked")
+                            : t("calculator.angleMode")
                     }
                 >
                     <button
@@ -1103,8 +1114,8 @@ function CalculatorToolbar({
                         disabled={angleLocked}
                         title={
                             angleLocked
-                                ? "Angle mode is locked by the note author"
-                                : "Use radians for trigonometric functions"
+                                ? t("calculator.angleLockedHint")
+                                : t("calculator.radiansHint")
                         }
                         onClick={() =>
                             onAngleModeChange(
@@ -1122,8 +1133,8 @@ function CalculatorToolbar({
                         disabled={angleLocked}
                         title={
                             angleLocked
-                                ? "Angle mode is locked by the note author"
-                                : "Use degrees for trigonometric functions"
+                                ? t("calculator.angleLockedHint")
+                                : t("calculator.degreesHint")
                         }
                         onClick={() =>
                             onAngleModeChange(
@@ -1136,14 +1147,14 @@ function CalculatorToolbar({
                 </div>
                 <div
                     className="calculator-toolbar__segmented"
-                    aria-label="Result format"
+                    aria-label={t("calculator.resultFormat")}
                 >
                     <button
                         type="button"
                         aria-pressed={
                             format === "decimal"
                         }
-                        title="Decimal result"
+                        title={t("calculator.decimalResult")}
                         onClick={() =>
                             onFormatChange("decimal")
                         }
@@ -1155,7 +1166,7 @@ function CalculatorToolbar({
                         aria-pressed={
                             format === "scientific"
                         }
-                        title="Scientific notation"
+                        title={t("calculator.scientificNotation")}
                         onClick={() =>
                             onFormatChange(
                                 "scientific",

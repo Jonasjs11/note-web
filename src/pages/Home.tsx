@@ -1,30 +1,5 @@
-import {
-    useLanguage,
-} from "../app/LanguageContext";
-
-const homeText = {
-    en: {
-        title: "Physics & Mathematics Notes",
-        welcome: "Welcome!",
-    },
-
-    da: {
-        title: "Noter i fysik og matematik",
-        welcome: "Velkommen!",
-    },
-} as const;
-
+import { useUiTranslation } from "../i18n/useUiTranslation";
 export default function Home() {
-    const {
-        language,
-    } = useLanguage();
-
-    const text = homeText[language];
-
-    return (
-        <>
-            <h1>{text.title}</h1>
-            <p>{text.welcome}</p>
-        </>
-    );
+    const t = useUiTranslation();
+    return <><h1>{t("home.title")}</h1><p>{t("home.welcome")}</p></>;
 }

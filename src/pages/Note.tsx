@@ -1,150 +1,62 @@
-import { useLocation } from "react-router-dom";
-
+import { useEffect } from "react";
+import { useLocation, useOutletContext } from "react-router-dom";
 import { notes } from "../content/loader/loadNotes";
-
 import type { Diagnostic } from "../content/models/Diagnostic";
-
 import MarkdownRenderer from "../components/Markdown/MarkdownView";
-
-import {
-    useEffect,
-} from "react";
-
-import {
-    useOutletContext,
-} from "react-router-dom";
-
-import type {
-    LayoutOutletContext,
-} from "../app/Layout";
+import type { LayoutOutletContext } from "../app/Layout";
+import { useUiTranslation } from "../i18n/useUiTranslation";
 
 export default function Note() {
+    const t = useUiTranslation();
     const location = useLocation();
-
-    const pathname = decodeURI(
-        location.pathname,
-    ).normalize("NFC");
-
-    const note = notes.find((candidate) => {
-        return (
-            candidate.url.normalize("NFC") ===
-            pathname
-        );
-    });
-
-    const {
-        setSiteContentsSections,
-    } = useOutletContext<LayoutOutletContext>();
-
+    const pathname = decodeURI(location.pathname).normalize("NFC");
+    const note = notes.find(candidate => candidate.url.normalize("NFC") === pathname);
+    const { setSiteContentsSections } = useOutletContext<LayoutOutletContext>();
     useEffect(() => {
-        setSiteContentsSections(
-            note?.sections ?? [],
-        );
+        setSiteContentsSections(note?.sections ?? []);
+        return () => { setSiteContentsSections([]); };
+    }, [note?.sections, setSiteContentsSections]);
 
-        return () => {
-            setSiteContentsSections([]);
-        };
-    }, [
-        note?.sections,
-        setSiteContentsSections,
-    ]);
-
-    if (!note) {
-        return (
-            <>
-                <h1>Note not found</h1>
-
-                <p>
-                    No note exists at{" "}
-                    <code>{location.pathname}</code>.
-                </p>
-            </>
-        );
-    }
-
-    const errors = note.diagnostics.filter(
-        diagnostic => diagnostic.severity === "error",
+    if (!note) return (
+        <>
+            <h1>{t("page.notFound")}</h1>
+            <p>{t("page.missingAt", { path: location.pathname })}</p>
+        </>
     );
-
-    const warnings = note.diagnostics.filter(
-        diagnostic => diagnostic.severity === "warning",
+    const errors = note.diagnostics.filter(diagnostic => diagnostic.severity === "error");
+    const warnings = note.diagnostics.filter(diagnostic => diagnostic.severity === "warning");
+    if (errors.length) return (
+        <>
+            <h1>{t("page.invalid")}</h1>
+            <p>{t("page.invalidExplanation")}</p>
+            <DiagnosticList title={t("diagnostics.errors")} diagnostics={errors} />
+            {warnings.length > 0 && <DiagnosticList title={t("diagnostics.warnings")} diagnostics={warnings} />}
+        </>
     );
-
-    if (errors.length > 0) {
-        return (
-            <>
-                <h1>Invalid note</h1>
-
-                <p>
-                    This note contains errors and cannot be
-                    rendered.
-                </p>
-
-                <DiagnosticList
-                    title="Errors"
-                    diagnostics={errors}
-                />
-
-                {warnings.length > 0 && (
-                    <DiagnosticList
-                        title="Warnings"
-                        diagnostics={warnings}
-                    />
-                )}
-            </>
-        );
-    }
-
     return (
         <>
-            {warnings.length > 0 && (
-                <DiagnosticList
-                    title="Warnings"
-                    diagnostics={warnings}
-                />
-            )}
-
-            <MarkdownRenderer
-                key={note.url}
-                source={note.transformedSource}
-            />
+            {warnings.length > 0 && <DiagnosticList title={t("diagnostics.warnings")} diagnostics={warnings} />}
+            <MarkdownRenderer key={note.url} source={note.transformedSource} />
         </>
     );
 }
-
-function DiagnosticList({
-    title,
-    diagnostics,
-}: {
-    title: string;
-    diagnostics: Diagnostic[];
-}) {
+function DiagnosticList({ title, diagnostics }: { title: string; diagnostics: Diagnostic[] }) {
+    const t = useUiTranslation();
     return (
         <section>
             <h2>{title}</h2>
-
             <ul>
-                {diagnostics.map(
-                    (diagnostic, index) => (
-                        <li key={index}>
-                            <strong>
-                                {diagnostic.filePath}
-                            </strong>
-
-                            {diagnostic.location && (
-                                <>
-                                    {" — line "}
-                                    {diagnostic.location.line}
-                                    {", column "}
-                                    {diagnostic.location.column}
-                                </>
-                            )}
-
-                            {": "}
-                            {diagnostic.message}
-                        </li>
-                    ),
-                )}
+                {diagnostics.map((diagnostic, index) => (
+                    <li key={index}>
+                        <strong>{diagnostic.filePath}</strong>
+                        {diagnostic.location && (
+                            <>
+                                {` — ${t("diagnostics.line")} ${diagnostic.location.line}, ${t("diagnostics.column")} ${diagnostic.location.column}`}
+                            </>
+                        )}
+                        {": "}{diagnostic.message}
+                    </li>
+                ))}
             </ul>
         </section>
     );

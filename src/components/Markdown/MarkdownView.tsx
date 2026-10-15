@@ -32,6 +32,8 @@ import rehypeCommandTokens
 
 import rehypeEndmatterOrder from "../../content/footnotes/rehypeEndmatterOrder";
 
+import { useUiTranslation } from "../../i18n/useUiTranslation";
+
 const markdownComponents = {
     "command-token":
         CommandTokenComponent,
@@ -148,6 +150,8 @@ export default function MarkdownView({
 }: MarkdownViewProps) {
     const rootRef = useRef<HTMLElement | null>(null);
     const [preview, setPreview] = useState<FootnotePreview | null>(null);
+
+    const t = useUiTranslation();
 
     function setRootRef(element: HTMLElement | null): void {
         rootRef.current = element;
@@ -287,6 +291,10 @@ export default function MarkdownView({
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeCommandTokens, rehypeEndmatterOrder, rehypeMathjax]}
                 components={mergedComponents}
+                remarkRehypeOptions={{
+                    footnoteLabel: t("footnotes.title"),
+                    footnoteBackLabel: t("footnotes.return"),
+                }}
                 skipHtml
             >
                 {source}

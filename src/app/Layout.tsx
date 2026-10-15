@@ -24,6 +24,8 @@ import SiteContents
 import SubjectProvider
     from "./SubjectProvider";
 
+import { useUiTranslation } from "../i18n/useUiTranslation";
+
 export interface LayoutOutletContext {
     setSiteContentsSections:
         (sections: Section[]) => void;
@@ -41,6 +43,8 @@ export default function Layout() {
     ] = useState(false);
 
     const location = useLocation();
+
+    const t = useUiTranslation();
 
     useEffect(() => {
         if (!location.hash) {
@@ -158,7 +162,7 @@ export default function Layout() {
                     <button
                         type="button"
                         className="sidebar-backdrop"
-                        aria-label="Close navigation"
+                        aria-label={t("navigation.close")}
                         onClick={() => {
                             setIsSidebarOpen(false);
                         }}
