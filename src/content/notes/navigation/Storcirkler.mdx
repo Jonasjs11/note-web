@@ -1,15 +1,49 @@
-# Storcircler
+# Storcirkler
+
+## Hvilken kurs vil du flyve?
+Der findes uendligt mange måder man kan flyve fra punkt A til punkt B. I navigation er vi interresserede i at lave systematiske valg for den rute man vil flyve. Her er der 2 hoved-metoder man kan bruge med hver sine fordele og ulemper:
+- Kompaslinjer med konstant kurs (loxodrom)
+    - Primær fordel: Nemt at flyve, kompasset skal bare vise det samme hele turen
+    - Primær ulempe: Er ikke den mest optimale rute, distancemæssigt
+- Storcirkler (ortodrom)
+    - Primær fordel: Er den korteste rute mellem to punkter på en kugle (som vi kan approksimere jorden til at være)
+    - Primær ulempe: Ville kræve at man konstant ændrer kompaskurs på hele turen for at følge den perfekt
+
+I praksis giver det ikke mening at bekymre sig om at flyve storcirkler når vi svæveflyver. I de størrelsesskalaer vores ture er, er der næsten ingen forskel mellem kompaslinjen og storcirklen. Vi beregner oftest heller ikke kurser på forhånd, så det er oftest kun hvis man flyver TMG at det kan give mening at overveje.
 
 \begin{figure}
-\includegraphics[width=70%]{navigation/Great Circle.webp}
-\caption{Storcirkel/Orthodrom}
+\includegraphics[width=50%]{navigation/Great Circle.webp}
+\caption{Storcirkel/Ortodrom}
 \label{fig:Storcirkel}
 \source{https://www.caliper.com/glossary/what-is-a-great-circle.htm?srsltid=AYCX9vJctm3J8cjKFnGQRMhugUz0gHI6AG64zSzb4isGC0z_ofPVEZXk}
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=40%]{navigation/Loxodrome.png}
+\includegraphics[width=25%]{navigation/Loxodrome.png}
 \caption{Kurslinje/Loxodrom}
 \label{fig:LoxodromeWikipedia}
 \source{https://commons.wikimedia.org/wiki/File:Loxodrome.png}
 \end{figure}
+
+
+## Hvad er en storcirkel?
+Generelt kalder man den korteste vej mellem to punkter på en overflade for en geodætisk linje (geodesic line på engelsk). På en kugle er et udsnit af storcirklen der går igennem start- og slutpunktet den geodætiske linje. 
+
+En storcirkel kan forstås som en cirkel med samme radius og centrum som kuglen. En storcirkel er den største cirkel man kan lave på en kugle. Hvis man skærer en kugle over ved en storcirkel vil kugleskallen blive opdelt i to lige store dele.
+
+### Storcirkler på jorden
+Ækvator er den eneste breddegrad som er en storcirkel, dette giver visuel mening da det er den breddegrad med "størst radius" og har centrum i jordens/kuglens centrum. Alle længdegrader er storcirkler.
+\begin{figure}
+\includegraphics[width=40%]{navigation/GraderGlobus.png}
+\caption{Kurslinje/Loxodrom}
+\label{fig:BreddegradLængdegrad}
+\end{figure}
+
+## Intuitiv simulation
+Det du skal få ud af simulationen:
+1. Storcirkel banen man kan flyve er en del af en cirkel (cirkelbue) med centrum i jordens centrum.
+2. Man flyver kortere afstande hvis man flyver efter storcirkler ift. af flyve med konstant kurs.
+3. På et kort med en Mercator projektion er storcirklen buet, men den konstantue kurs er en lige linje.
+4. På et kort med en Lambert konform konisk projektion er storcirklen *næsten* en lige linje.
+
+\simulation{orthodrome-loxodrome}
