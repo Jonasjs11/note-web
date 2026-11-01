@@ -30,6 +30,7 @@ export function listSimulationIds(): string[] {
 export function hasSimulation(
     simulationId: string,
 ): boolean {
+    if (simulationId === "orthodrome-loxodrome") return true;
     return (
         getSimulationLoader(simulationId) !==
         undefined
