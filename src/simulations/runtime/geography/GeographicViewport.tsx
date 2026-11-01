@@ -1,24 +1,29 @@
 import {useCallback, useEffect, useRef, useState} from "react";
 import type {PointerEvent} from "react";
 import {
-    add, clamp, dot, fromVector, greatCirclePlane, localFrame,
-    multiply, parallelAngle, pointOnRoute, RAD, routeBearing, rhumbMeridianCrossings,
+    add, clamp, completeGreatCircle, dot, extendedRhumbLine, fromVector, greatCirclePlane, localFrame,
+    meridianAngle, multiply, pointOnRoute, RAD, routeBearing, rhumbMeridianCrossings,
     toVector, unit, wrapLon,
 } from "./sphericalNavigation";
 import type {GeoPoint, RouteKind} from "./sphericalNavigation";
 
-export type MapProjection = "globe" | "mercator" | "equirectangular";
+export type MapProjection = "globe" | "mercator";
 type ScreenPoint = {x:number;y:number;z:number;visible:boolean;lon:number};
 type RoutePixel = {x:number;y:number;t:number;visible:boolean;lon:number};
 type Hover = {kind:RouteKind;t:number;x:number;y:number};
 type GlobeProps = {
     from:GeoPoint; to:GeoPoint; projection:MapProjection; translucent:boolean;
-    meridianStep:number; showGrid:boolean; zoom:number; focus?:GeoPoint|null;
+    meridianStep:number; showGrid:boolean; showFullRoutes:boolean;
+    zoom:number; focus?:GeoPoint|null; picking:boolean;
+    hoverLabels?:{orthodrome:string;loxodrome:string;meridian:string;trueTrack:string};
     onPick:(point:GeoPoint)=>void; onHover?:(value:string)=>void;
 };
 type Camera = {lat:number;lon:number};
-const ACCENT = "#ffb35c";
-const SECONDARY = "#8ae4f2";
+// Darker endpoint-to-endpoint arcs on top of lighter complete routes.
+const LOXODROME = "#df8740";
+const ORTHODROME = "#3dbfd6";
+const LOXODROME_EXTENSION = "#ffd3a3";
+const ORTHODROME_EXTENSION = "#95e8f4";
 const MAX_LAT = 85;
 const traceSteps = 220;
 const formatAngle = (number:number) => number.toFixed(1)+"°";
@@ -28,7 +33,8 @@ const cssPoint = (event:PointerEvent<HTMLCanvasElement>,canvas:HTMLCanvasElement
 };
 
 export default function GeographicViewport({
-    from,to,projection,translucent,meridianStep,showGrid,zoom,focus,onPick,onHover,
+    from,to,projection,translucent,meridianStep,showGrid,showFullRoutes,
+    zoom,focus,picking,hoverLabels,onPick,onHover,
 }:GlobeProps) {
     const canvasRef=useRef<HTMLCanvasElement>(null);
     const [size,setSize]=useState({width:720,height:410});
@@ -94,11 +100,11 @@ export default function GeographicViewport({
         const gy=cy-dot(v,basis.north)*radius;
         const z=dot(v,basis.up);
         const mx=cx+relative/180*mapWidth/2;
-        const my=cy-(projection==="mercator"?
-            Math.log(Math.tan(Math.PI/4+clamp(p.lat,-MAX_LAT,MAX_LAT)*RAD/2))/Math.PI:
-            p.lat/90)*mapHeight/2;
+        const my=cy-Math.log(Math.tan(Math.PI/4+clamp(p.lat,-MAX_LAT,MAX_LAT)*RAD/2))/Math.PI*mapHeight/2;
+        const visible=(z>=-0.002||translucent||morph>0.3)&&
+            (morph<0.8||Math.abs(p.lat)<=MAX_LAT+1e-6);
         return {x:gx*(1-morph)+mx*morph,y:gy*(1-morph)+my*morph,
-            z,visible:z>=-0.002||translucent||morph>0.3,lon:relative};
+            z,visible,lon:relative};
     },[camera,layout,projection,morph,translucent]);
 
     const unproject=useCallback((x:number,y:number):GeoPoint|null=>{
@@ -106,8 +112,7 @@ export default function GeographicViewport({
         if(projection!=="globe"){
             const sx=(x-cx)/(mapWidth/2),sy=(cy-y)/(mapHeight/2);
             if(Math.abs(sx)>1||Math.abs(sy)>1)return null;
-            const lat=projection==="mercator"?
-                (2*Math.atan(Math.exp(sy*Math.PI))-Math.PI/2)/RAD:sy*90;
+            const lat=(2*Math.atan(Math.exp(sy*Math.PI))-Math.PI/2)/RAD;
             return {lat:clamp(lat,-90,90),lon:wrapLon(camera.lon+sx*180)};
         }
         const nx=(x-cx)/radius,ny=-(y-cy)/radius;
@@ -225,60 +230,76 @@ export default function GeographicViewport({
                 if(i===0)ctx.moveTo(pos.x,pos.y);else ctx.lineTo(pos.x,pos.y);
             });
             ctx.closePath();
-            ctx.fillStyle="#ffbd64";ctx.globalAlpha=(1-pMap)*0.16;ctx.fill();
-            ctx.strokeStyle="#ffc576";ctx.globalAlpha=(1-pMap)*0.58;ctx.lineWidth=1.6;ctx.stroke();
+            ctx.fillStyle=ORTHODROME;ctx.globalAlpha=(1-pMap)*0.16;ctx.fill();
+            ctx.strokeStyle=ORTHODROME;ctx.globalAlpha=(1-pMap)*0.64;ctx.lineWidth=1.6;ctx.stroke();
             ctx.globalAlpha=1;
             ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);
-            ctx.fillStyle="#ffe1a7";ctx.fill();
+            ctx.fillStyle=ORTHODROME;ctx.fill();
         }
 
         const routePixels:{kind:RouteKind;points:RoutePixel[]}[]=[];
-        for(const kind of ["greatCircle","rhumb"] as const){
-            const coords:GeoPoint[]=[];
-            for(let i=0;i<=traceSteps;i++)coords.push(pointOnRoute(kind,from,to,i/traceSteps));
-            const pixels=coords.map((geo,i)=>{
-                const p=project(geo);
-                return {x:p.x,y:p.y,t:i/traceSteps,visible:p.visible,lon:p.lon};
+        const traceRoute=(kind:RouteKind,samples:{point:GeoPoint;t:number}[],color:string,width:number,alpha:number)=>{
+            const pixels=samples.map(({point,t})=>{
+                const p=project(point);
+                return {x:p.x,y:p.y,t,visible:p.visible,lon:p.lon};
             });
             routePixels.push({kind,points:pixels});
             ctx.beginPath();let started=false;
             for(let i=0;i<pixels.length;i++){
                 const p=pixels[i],previous=pixels[i-1];
-                if(!p.visible|| (previous&&inMap&&Math.abs(p.lon-previous.lon)>180))started=false;
+                if(!p.visible||(previous&&inMap&&Math.abs(p.lon-previous.lon)>180))started=false;
                 if(p.visible){
                     if(started)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);
                     started=true;
                 }
             }
-            ctx.globalAlpha=0.95;
-            ctx.strokeStyle=kind==="rhumb"?ACCENT:SECONDARY;
-            ctx.lineWidth=kind==="rhumb"?3.2:3.4;
+            ctx.globalAlpha=alpha;
+            ctx.strokeStyle=color;ctx.lineWidth=width;
             ctx.lineCap="round";ctx.lineJoin="round";ctx.stroke();
             ctx.globalAlpha=1;
+        };
+        // Full great circle is closed. The full rhumb has infinite length:
+        // continue it to near-polar latitudes, avoiding the pole singularities.
+        if(showFullRoutes){
+            const psiLimit=projection==="globe"?6.3:
+                Math.log(Math.tan(Math.PI/4+MAX_LAT*RAD/2));
+            traceRoute("greatCircle",completeGreatCircle(from,to),
+                ORTHODROME_EXTENSION,1.8,0.78);
+            traceRoute("rhumb",extendedRhumbLine(from,to,psiLimit),
+                LOXODROME_EXTENSION,1.8,0.78);
+        }
+        // Draw the selected shortest arcs last, in darker, thicker colors.
+        for(const kind of ["greatCircle","rhumb"] as const){
+            const samples=Array.from({length:traceSteps+1},(_,i)=>{
+                const t=i/traceSteps;
+                return {point:pointOnRoute(kind,from,to,t),t};
+            });
+            traceRoute(kind,samples,kind==="rhumb"?LOXODROME:ORTHODROME,3.5,1);
         }
         pixelsRef.current=routePixels;
 
         const bearing=routeBearing("rhumb",from,to,0);
         const crossings=rhumbMeridianCrossings(from,to,meridianStep);
-        const markArc=(p:GeoPoint,heading:number,radiusArc:number,relativeToParallel=false)=>{
+        const markArc=(p:GeoPoint,heading:number,radiusArc:number)=>{
             const {east,north,up}=localFrame(p);
-            const start=relativeToParallel?90:0;
-            const delta=relativeToParallel?
-                ((heading-90+540)%360)-180:((heading+540)%360)-180;
+            // Use the nearest north/south meridian direction, making the
+            // visible arc equal to the acute angle displayed on hover.
+            const start=Math.cos(heading*RAD)>=0?0:180;
+            const delta=((heading-start+540)%360)-180;
             const arc:GeoPoint[]=[];
-            for(let j=0;j<=12;j++){
-                const angle=(start+delta*j/12)*RAD;
-                const v=add(multiply(up,Math.cos(radiusArc)),
-                    multiply(add(multiply(north,Math.cos(angle)),multiply(east,Math.sin(angle))),Math.sin(radiusArc)));
-                arc.push(fromVector(unit(v)));
+            for(let j=0;j<=16;j++){
+                const angle=(start+delta*j/16)*RAD;
+                const tangent=add(multiply(north,Math.cos(angle)),multiply(east,Math.sin(angle)));
+                arc.push(fromVector(unit(add(multiply(up,Math.cos(radiusArc)),
+                    multiply(tangent,Math.sin(radiusArc))))));
             }
-            drawPath(arc,relativeToParallel?"#fff2b3":"#ffd0a0",2,0.95);
+            drawPath(arc,"#fff2b3",2,0.95);
         };
         for(let i=0;i<crossings.length;i++){
             const pos=project(crossings[i]);
             if(!pos.visible)continue;
             ctx.beginPath();ctx.arc(pos.x,pos.y,2.8,0,Math.PI*2);
-            ctx.fillStyle=ACCENT;ctx.fill();
+            ctx.fillStyle=LOXODROME;ctx.fill();
             if(meridianStep>=15)markArc(crossings[i],bearing,0.085);
             if(meridianStep>=30|| (meridianStep>=15&&i%2===0)){
                 ctx.font="11px system-ui,sans-serif";
@@ -300,22 +321,24 @@ export default function GeographicViewport({
         if(hover){
             const point=pointOnRoute(hover.kind,from,to,hover.t);
             const heading=routeBearing(hover.kind,from,to,hover.t);
-            const lat:GeoPoint[]=[];
-            for(let lon=-180;lon<=180;lon+=1.5)lat.push({lat:point.lat,lon});
-            drawPath(lat,"#6ce7b5",1.9,0.92);
+            // A meridian (fixed longitude) replaces the old parallel guide.
+            const meridian:GeoPoint[]=[];
+            for(let latitude=-89;latitude<=89;latitude+=1)
+                meridian.push({lat:latitude,lon:point.lon});
+            drawPath(meridian,"#6ce7b5",1.9,0.92);
             const frame=localFrame(point);
             const a=heading*RAD;
             const direction=add(multiply(frame.north,Math.cos(a)),multiply(frame.east,Math.sin(a)));
             const tangent:GeoPoint[]=[];
-            const parallel:GeoPoint[]=[];
+            const northSouth:GeoPoint[]=[];
             for(let i=-8;i<=8;i++){
                 const d=i*0.015;
                 tangent.push(fromVector(unit(add(multiply(frame.up,Math.cos(d)),multiply(direction,Math.sin(d))))));
-                parallel.push(fromVector(unit(add(multiply(frame.up,Math.cos(d)),multiply(frame.east,Math.sin(d))))));
+                northSouth.push(fromVector(unit(add(multiply(frame.up,Math.cos(d)),multiply(frame.north,Math.sin(d))))));
             }
-            drawPath(parallel,"#68e7b1",2.6,0.95);
+            drawPath(northSouth,"#68e7b1",2.6,0.95);
             drawPath(tangent,"#ffe3a2",2.7,0.95);
-            markArc(point,heading,0.13,true);
+            markArc(point,heading,0.13);
             const pt=project(point);
             ctx.beginPath();ctx.arc(pt.x,pt.y,4.2,0,Math.PI*2);
             ctx.fillStyle="#ffffff";ctx.fill();
@@ -323,10 +346,10 @@ export default function GeographicViewport({
         ctx.restore();
 
         if(hover){
-            const p=pointOnRoute(hover.kind,from,to,hover.t);
             const bearing=routeBearing(hover.kind,from,to,hover.t);
-            const label=(hover.kind==="rhumb"?"Loxodrome":"Orthodrome")+
-                "  "+formatAngle(bearing)+" T   ·   "+formatAngle(parallelAngle(bearing))+" to latitude";
+            const name=hover.kind==="rhumb"?(hoverLabels?.loxodrome??"Loxodrome"):(hoverLabels?.orthodrome??"Orthodrome");
+            const label=name+"  "+formatAngle(bearing)+" "+(hoverLabels?.trueTrack??"true")+
+                "   ·   "+formatAngle(meridianAngle(bearing))+" "+(hoverLabels?.meridian??"to meridian");
             ctx.font="12px system-ui,sans-serif";ctx.textAlign="left";
             const width=Math.min(w-16,ctx.measureText(label).width+20);
             const x=clamp(hover.x-width/2,8,w-width-8);
@@ -334,9 +357,8 @@ export default function GeographicViewport({
             ctx.fillStyle="rgba(12,25,39,0.94)";
             ctx.beginPath();ctx.roundRect(x,y,width,30,7);ctx.fill();
             ctx.fillStyle="#ffffff";ctx.fillText(label,x+10,y+19,width-19);
-            void p;
         }
-    },[size,camera,project,layout,from,to,world,morph,projection,translucent,meridianStep,showGrid,hover,zoom]);
+    },[size,camera,project,layout,from,to,world,morph,projection,translucent,meridianStep,showGrid,showFullRoutes,hover,zoom,hoverLabels]);
 
     const onPointerDown=(event:PointerEvent<HTMLCanvasElement>)=>{
         event.currentTarget.setPointerCapture(event.pointerId);
@@ -378,9 +400,9 @@ export default function GeographicViewport({
         if(best){
             const {kind,t}=best;
             setHover({kind,t,x:pos.x,y:pos.y});
-            onHover?.((kind==="rhumb"?"Loxodrome":"Orthodrome")+
-                ": "+formatAngle(routeBearing(kind,from,to,t))+" true; "+
-                formatAngle(parallelAngle(routeBearing(kind,from,to,t)))+" to latitude");
+            onHover?.((kind==="rhumb"?(hoverLabels?.loxodrome??"Loxodrome"):(hoverLabels?.orthodrome??"Orthodrome"))+
+                ": "+formatAngle(routeBearing(kind,from,to,t))+" "+(hoverLabels?.trueTrack??"true")+"; "+
+                formatAngle(meridianAngle(routeBearing(kind,from,to,t)))+" "+(hoverLabels?.meridian??"to meridian"));
         }else{
             setHover(null);onHover?.("");
         }
@@ -389,7 +411,7 @@ export default function GeographicViewport({
         const drag=dragRef.current;
         if(drag&&drag.id===event.pointerId){
             const p=cssPoint(event,event.currentTarget);
-            if(!drag.moved){
+            if(!drag.moved&&picking){
                 const selected=unproject(p.x,p.y);
                 if(selected)onPick(selected);
             }
@@ -397,8 +419,8 @@ export default function GeographicViewport({
         }
     };
     return <canvas
-        className="geographic-viewport" ref={canvasRef} role="img"
-        aria-label="Interactive globe and map. Tap to set a location, drag to rotate or pan, and hover over a route to inspect its course."
+        className={"geographic-viewport"+(picking?" geographic-viewport--picking":"")} ref={canvasRef} role="img"
+        aria-label={"Interactive globe and map. Drag to rotate or pan; hover over a route to inspect its course. "+(picking?"Tap to set the selected point.":"Select A or B before tapping to place a point.")}
         onPointerDown={onPointerDown} onPointerMove={onPointerMove}
         onPointerUp={onPointerUp} onPointerCancel={()=>{dragRef.current=null;}}
         onPointerLeave={()=>{if(!dragRef.current){setHover(null);onHover?.("");}}}

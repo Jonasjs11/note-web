@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import {useLanguage} from "../../../app/LanguageContext";
 import GeographicViewport from "../../runtime/geography/GeographicViewport";
 import type {MapProjection} from "../../runtime/geography/GeographicViewport";
@@ -19,35 +19,41 @@ const strings={
     en:{
         title:"Great circles & rhumb lines",
         subtitle:"Compare the shortest spherical route with a constant-bearing route.",
-        globe:"3D globe",mercator:"Mercator",equirectangular:"Equirectangular",
+        globe:"3D globe",mercator:"Mercator",
         greatCircle:"Orthodrome · great circle",rhumb:"Loxodrome · rhumb line",
         from:"A · Start",to:"B · Destination",lat:"Latitude",lon:"Longitude",
         pickFrom:"Pick start",pickTo:"Pick destination",selected:"Selecting",
-        instructions:"Drag to rotate or pan · Tap to set the selected point · Hover over a route to inspect its angle",
+        instructions:"Drag to rotate or pan · Select A or B, then tap to place it · Hover over a route to inspect its angle to a meridian",
         distance:"Distance",saving:"Orthodrome saves",difference:"Difference",
         departure:"Initial true track",arrival:"Final true track",constant:"Constant true track",
         transparency:"Translucent Earth + great-circle plane",
+        fullRoutes:"Show complete routes",
+        continuation:"The great circle closes after 360°. A loxodrome typically spirals endlessly toward the poles, so its extension is shown to about ±89.8°.",
+        meridian:"to meridian",trueTrack:"true track",
         grid:"Latitude / longitude grid",step:"Meridians every",zoom:"Zoom",
         chooseRoute:"Example route",custom:"Custom",swap:"Swap A ↔ B",
-        note:"Spherical Earth (mean radius 6,371.0088 km); distances are in nautical miles. Angles are measured on the sphere. Mercator preserves local angles and makes rhumb lines straight. The shortest great-circle arc is undefined uniquely for antipodal points.",
-        inspect:"Hover or tap a track to inspect its bearing and its angle with a parallel.",
+        note:"Spherical Earth (mean radius 6,371.0088 km); distances are in nautical miles (NM) and kilometers (km). Angles are measured on the sphere, against the meridians (lines of longitude). Mercator preserves local angles and makes rhumb lines straight. The shortest great-circle arc is undefined uniquely for antipodal points.",
+        inspect:"Hover over a track to inspect its true bearing and its angle with the meridian.",
         warning:"Endpoints are nearly identical or antipodal; the great-circle direction may be ambiguous.",
     },
     da:{
         title:"Ortodromer og loksodromer",
         subtitle:"Sammenlign den korteste vej på kuglen med en rute med konstant retvisende kurs.",
-        globe:"3D-globus",mercator:"Mercator",equirectangular:"Platte carrée",
+        globe:"3D-globus",mercator:"Mercator",
         greatCircle:"Ortodrom · storcirkel",rhumb:"Loksodrom · kompaslinje",
         from:"A · Start",to:"B · Slutpunkt",lat:"Breddegrad",lon:"Længdegrad",
         pickFrom:"Vælg start",pickTo:"Vælg slutpunkt",selected:"Vælger",
-        instructions:"Træk for at dreje eller flytte · Tryk for at placere et punkt · Hold musen over en rute for at se vinkler",
+        instructions:"Træk for at dreje eller flytte · Vælg A eller B, og tryk for at placere punktet · Hold musen over en rute for at se vinklen med meridianen",
         distance:"Distance",saving:"Ortodromen sparer",difference:"Forskel",
         departure:"Start-retvisende track",arrival:"Slut-retvisende track",constant:"Konstant retvisende track",
         transparency:"Gennemsigtig jord + storcirkelplan",
+        fullRoutes:"Vis hele ruterne",
+        continuation:"Storcirklen slutter sig efter 360°. En loksodrom spiraler normalt uendeligt mod polerne, så forlængelsen vises til cirka ±89,8°.",
+        meridian:"til meridian",trueTrack:"retvisende track",
         grid:"Bredde- og længdegrader",step:"Meridianer for hver",zoom:"Zoom",
         chooseRoute:"Eksempelrute",custom:"Egen rute",swap:"Byt A ↔ B",
-        note:"Kugleformet jord (middelradius 6.371,0088 km); afstande er i sømil (NM). Vinklerne måles på kuglen. Mercator er vinkelbevarende og viser loksodromer som rette linjer. Mellem antipodale punkter findes ingen entydig korteste storcirkel.",
-        inspect:"Hold musen over en rute for at se trackvinklen og vinklen med breddegraden.",
+        note:"Kugleformet jord (middelradius 6.371,0088 km); afstande er i sømil (NM) og kilometer (km). Vinklerne måles på kuglen i forhold til meridianerne (længdegradslinjerne). Mercator er vinkelbevarende og viser loksodromer som rette linjer. Mellem antipodale punkter findes ingen entydig korteste storcirkel.",
+        inspect:"Hold musen over en rute for at se retvisende track og vinklen med meridianen.",
         warning:"Punkterne er næsten ens eller antipodale; ortodromens retning kan være ubestemt.",
     },
 } as const;
@@ -55,11 +61,17 @@ type Side="from"|"to";
 export default function OrthodromeLoxodrome() {
     const {language}=useLanguage();
     const t=strings[language==="da"?"da":"en"];
+    const hoverLabels=useMemo(()=>({
+        orthodrome:language==="da"?"Ortodrom":"Orthodrome",
+        loxodrome:language==="da"?"Loksodrom":"Loxodrome",
+        meridian:t.meridian,trueTrack:t.trueTrack,
+    }),[language,t]);
     const [from,setFrom]=useState<GeoPoint>(PRESETS[0].from);
     const [to,setTo]=useState<GeoPoint>(PRESETS[0].to);
-    const [selected,setSelected]=useState<Side>("to");
+    const [selected,setSelected]=useState<Side|null>(null);
     const [projection,setProjection]=useState<MapProjection>("globe");
     const [translucent,setTranslucent]=useState(false);
+    const [showFullRoutes,setShowFullRoutes]=useState(false);
     const [showGrid,setShowGrid]=useState(true);
     const [meridianStep,setMeridianStep]=useState(30);
     const [zoom,setZoom]=useState(1);
@@ -70,8 +82,10 @@ export default function OrthodromeLoxodrome() {
         minimumFractionDigits:decimals,maximumFractionDigits:decimals,
     });
     const choosePoint=(p:GeoPoint)=>{
-        if(selected==="from"){setFrom(p);setSelected("to");}
+        if(selected===null)return;
+        if(selected==="from")setFrom(p);
         else setTo(p);
+        setSelected(null);
         setPreset("custom");
     };
     const update=(which:Side,axis:keyof GeoPoint,value:string)=>{
@@ -82,12 +96,14 @@ export default function OrthodromeLoxodrome() {
         const setter=which==="from"?setFrom:setTo;
         setter(current=>({...current,[axis]:normalized}));
         setPreset("custom");
+        setSelected(null);
     };
     const choosePreset=(value:string)=>{
         setPreset(value);
         const place=PRESETS[Number(value)];
         if(!place)return;
         setFrom(place.from);setTo(place.to);
+        setSelected(null);
         setFocus(greatCirclePoint(place.from,place.to,0.5));
     };
     const gc=greatCircleDistanceNm(from,to);
@@ -123,7 +139,7 @@ export default function OrthodromeLoxodrome() {
         </div>
         <div className="orthodrome-lab__tabs" role="group" aria-label="Projection">
             {([
-                ["globe",t.globe],["mercator",t.mercator],["equirectangular",t.equirectangular],
+                ["globe",t.globe],["mercator",t.mercator],
             ] as const).map(([id,label])=>
                 <button type="button" key={id} className={projection===id?"is-active":""}
                     aria-pressed={projection===id} onClick={()=>setProjection(id)}>{label}</button>
@@ -132,11 +148,13 @@ export default function OrthodromeLoxodrome() {
         <div className="orthodrome-lab__stage">
             <GeographicViewport from={from} to={to} projection={projection}
                 translucent={translucent} showGrid={showGrid}
+                showFullRoutes={showFullRoutes} picking={selected!==null}
+                hoverLabels={hoverLabels}
                 meridianStep={meridianStep} zoom={zoom} focus={focus}
                 onPick={choosePoint} onHover={setHovered} />
             <div className="orthodrome-lab__stage-legend">
                 <span>● A</span><span>● B</span>
-                <span>{t.selected}: {selected==="from"?"A":"B"}</span>
+                {selected!==null&&<span>{t.selected}: {selected==="from"?"A":"B"}</span>}
             </div>
         </div>
         <div className="orthodrome-lab__hint" role="status">
@@ -152,13 +170,13 @@ export default function OrthodromeLoxodrome() {
             <div className="orthodrome-lab__pick" role="group" aria-label="Choose point to place">
                 <button type="button" aria-pressed={selected==="from"}
                     className={selected==="from"?"is-active":""}
-                    onClick={()=>setSelected("from")}>{t.pickFrom}</button>
+                    onClick={()=>setSelected(current=>current==="from"?null:"from")}>{t.pickFrom}</button>
                 <button type="button" aria-pressed={selected==="to"}
                     className={selected==="to"?"is-active":""}
-                    onClick={()=>setSelected("to")}>{t.pickTo}</button>
+                    onClick={()=>setSelected(current=>current==="to"?null:"to")}>{t.pickTo}</button>
             </div>
             <button type="button" onClick={()=>{
-                setFrom(to);setTo(from);setPreset("custom");
+                setFrom(to);setTo(from);setPreset("custom");setSelected(null);
             }}>{t.swap}</button>
         </div>
         <div className="orthodrome-points">
@@ -169,21 +187,25 @@ export default function OrthodromeLoxodrome() {
             <div className="orthodrome-lab__metric">
                 <span>{t.greatCircle}</span>
                 <strong>{nf(gc,1)} NM</strong>
+                <small>{nf(gc*1.852,1)} km</small>
                 <small>{t.departure}: {heading(greatCircleBearing(from,to,0))}</small>
                 <small>{t.arrival}: {heading(greatCircleBearing(from,to,1))}</small>
             </div>
             <div className="orthodrome-lab__metric">
                 <span>{t.rhumb}</span>
                 <strong>{nf(rhumb,1)} NM</strong>
+                <small>{nf(rhumb*1.852,1)} km</small>
                 <small>{t.constant}: {heading(initialRhumbBearing(from,to))}</small>
             </div>
             <div className="orthodrome-lab__metric orthodrome-lab__metric--saving">
                 <span>{t.saving}</span>
                 <strong>{nf(saved,1)} NM</strong>
+                <small>{nf(saved*1.852,1)} km</small>
                 <small>{nf(percentage,2)}% · {t.difference}</small>
             </div>
         </div>
         <div className="orthodrome-lab__options">
+            <label><input type="checkbox" checked={showFullRoutes} onChange={e=>setShowFullRoutes(e.currentTarget.checked)}/>{t.fullRoutes}</label>
             <label><input type="checkbox" checked={translucent} onChange={e=>setTranslucent(e.currentTarget.checked)}/>{t.transparency}</label>
             <label><input type="checkbox" checked={showGrid} onChange={e=>setShowGrid(e.currentTarget.checked)}/>{t.grid}</label>
             <label>{t.step}
@@ -197,6 +219,7 @@ export default function OrthodromeLoxodrome() {
                     value={zoom} onChange={e=>setZoom(Number(e.currentTarget.value))}/>
             </label>
         </div>
+        {showFullRoutes&&<p className="orthodrome-lab__footnote">{t.continuation}</p>}
         {ambiguous&&<p className="orthodrome-lab__warning">{t.warning}</p>}
         <p className="orthodrome-lab__footnote">{t.note}</p>
     </section>;

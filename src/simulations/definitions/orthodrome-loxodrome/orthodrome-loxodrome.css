@@ -23,13 +23,14 @@
 .orthodrome-lab__legend{display:flex;flex-direction:column;gap:.4rem;font-size:.78rem;flex-shrink:0;}
 .orthodrome-lab__legend span{display:flex;align-items:center;gap:.4rem;}
 .orthodrome-lab__swatch{display:inline-block;width:1.1rem;height:3px;border-radius:2px;}
-.orthodrome-lab__swatch--gc{background:#8ae4f2;}
-.orthodrome-lab__swatch--rhumb{background:#ffb35c;}
+.orthodrome-lab__swatch--gc{background:#3dbfd6;}
+.orthodrome-lab__swatch--rhumb{background:#df8740;}
 .orthodrome-lab__tabs{display:flex;flex-wrap:wrap;gap:.4rem;padding:0 1rem .85rem;}
 .orthodrome-lab__tabs button{flex:1 1 8rem;}
 .orthodrome-lab__stage{height:clamp(280px,48vw,490px);position:relative;background:#0d1b29;overflow:hidden;}
 .orthodrome-lab .geographic-viewport{display:block;width:100%;height:100%;touch-action:none;cursor:grab;}
 .orthodrome-lab .geographic-viewport:active{cursor:grabbing;}
+.orthodrome-lab .geographic-viewport--picking:not(:active){cursor:crosshair;}
 .orthodrome-lab__stage-legend{position:absolute;left:10px;bottom:10px;display:flex;gap:.5rem;pointer-events:none;font-size:.72rem;color:#f0fafc;}
 .orthodrome-lab__stage-legend span{background:rgba(6,20,32,.8);padding:.3rem .5rem;border-radius:100px;}
 .orthodrome-lab__stage-legend span:first-child{color:#74e5b5;}
@@ -50,8 +51,8 @@
 .orthodrome-lab__metric>span{font-size:.72rem;color:var(--simulation-muted);}
 .orthodrome-lab__metric strong{font-size:clamp(1.1rem,2.3vw,1.6rem);font-weight:750;white-space:nowrap;letter-spacing:-.035em;}
 .orthodrome-lab__metric small{font-size:.69rem;color:var(--simulation-muted);}
-.orthodrome-lab__metric:first-child strong{color:var(--simulation-secondary-color);}
-.orthodrome-lab__metric:nth-child(2) strong{color:#d78d30;}
+.orthodrome-lab__metric:first-child strong{color:#3dbfd6;}
+.orthodrome-lab__metric:nth-child(2) strong{color:#df8740;}
 .orthodrome-lab__metric--saving strong{color:var(--simulation-accent);}
 .orthodrome-lab__options{display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;padding:.85rem 1rem;border-top:1px solid var(--simulation-border);}
 .orthodrome-lab__options label{display:flex;align-items:center;gap:.45rem;font-size:.79rem;}

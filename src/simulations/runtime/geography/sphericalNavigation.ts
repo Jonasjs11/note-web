@@ -84,6 +84,54 @@ export function greatCircleBearing(a:GeoPoint,b:GeoPoint,t:number) {
 export function routeBearing(kind:RouteKind,a:GeoPoint,b:GeoPoint,t:number) {
     return kind==="rhumb"?initialRhumbBearing(a,b):greatCircleBearing(a,b,t);
 }
+/** Acute angle between the route and the local meridian (longitude line), 0°–90°. */
+export function meridianAngle(bearing:number) {
+    const angle=bearing*RAD;
+    return Math.atan2(Math.abs(Math.sin(angle)),Math.abs(Math.cos(angle)))*DEG;
+}
+
+export interface RouteSample { point:GeoPoint; t:number }
+
+/** All 360° of the great circle containing both endpoints (not just the minor arc). */
+export function completeGreatCircle(a:GeoPoint,b:GeoPoint,steps=720):RouteSample[] {
+    const plane=greatCirclePlane(a,b);
+    return Array.from({length:steps+1},(_,i)=>{
+        const theta=i/steps*2*Math.PI;
+        return {
+            point:fromVector(add(multiply(plane.va,Math.cos(theta)),
+                multiply(plane.tangent,Math.sin(theta)))),
+            t:plane.angle>1e-9?theta/plane.angle:0,
+        };
+    });
+}
+
+/**
+ * A loxodrome usually spirals toward the poles forever. The visual extension
+ * stops at Mercator latitude ±6.3 (about ±89.79°) to avoid singular poles.
+ * An east–west rhumb follows a complete parallel instead.
+ */
+export function extendedRhumbLine(a:GeoPoint,b:GeoPoint,psiLimit=6.3):RouteSample[] {
+    const dpsi=mercatorY(b.lat)-mercatorY(a.lat);
+    const dlon=deltaLongitude(a.lon,b.lon);
+    if(Math.abs(dpsi)<1e-9){
+        if(Math.abs(dlon)<1e-9)return [];
+        const steps=720;
+        return Array.from({length:steps+1},(_,i)=>{
+            const t=(Math.sign(dlon)*360*i/steps)/dlon;
+            return {point:rhumbPoint(a,b,t),t};
+        });
+    }
+    const psiA=mercatorY(a.lat);
+    const minPsi=-Math.abs(psiLimit), maxPsi=Math.abs(psiLimit);
+    const turns=Math.abs((maxPsi-minPsi)*dlon/dpsi/360);
+    const steps=Math.min(2800,Math.max(720,Math.ceil(turns*240)));
+    return Array.from({length:steps+1},(_,i)=>{
+        const psi=minPsi+(maxPsi-minPsi)*i/steps;
+        const t=(psi-psiA)/dpsi;
+        return {point:rhumbPoint(a,b,t),t};
+    });
+}
+
 /** True (undirected, acute) angle between a route tangent and the local parallel. */
 export function parallelAngle(bearing:number) {
     const angle=bearing*RAD;
