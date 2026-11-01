@@ -19,41 +19,41 @@ const strings={
     en:{
         title:"Great circles & rhumb lines",
         subtitle:"Compare the shortest spherical route with a constant-bearing route.",
-        globe:"3D globe",mercator:"Mercator",
+        globe:"3D globe",mercator:"Mercator",lambert:"Lambert conformal conic",
         greatCircle:"Orthodrome · great circle",rhumb:"Loxodrome · rhumb line",
         from:"A · Start",to:"B · Destination",lat:"Latitude",lon:"Longitude",
         pickFrom:"Pick start",pickTo:"Pick destination",selected:"Selecting",
-        instructions:"Drag to rotate or pan · Select A or B, then tap to place it · Hover over a route to inspect its angle to a meridian",
+        instructions:"Drag to rotate or pan · Select A or B, then tap to place it · Hover over a route for its clockwise true track angle",
         distance:"Distance",saving:"Orthodrome saves",difference:"Difference",
         departure:"Initial true track",arrival:"Final true track",constant:"Constant true track",
         transparency:"Translucent Earth + great-circle plane",
         fullRoutes:"Show complete routes",
-        continuation:"The great circle closes after 360°. A loxodrome typically spirals endlessly toward the poles, so its extension is shown to about ±89.8°.",
-        meridian:"to meridian",trueTrack:"true track",
+        continuation:"The great circle closes after 360°. The loxodrome is infinite; to keep the display legible, only up to one longitude revolution is shown in total, or less if the poles are reached first.",
+        trueTrack:"true track",
         grid:"Latitude / longitude grid",step:"Meridians every",zoom:"Zoom",
         chooseRoute:"Example route",custom:"Custom",swap:"Swap A ↔ B",
-        note:"Spherical Earth (mean radius 6,371.0088 km); distances are in nautical miles (NM) and kilometers (km). Angles are measured on the sphere, against the meridians (lines of longitude). Mercator preserves local angles and makes rhumb lines straight. The shortest great-circle arc is undefined uniquely for antipodal points.",
-        inspect:"Hover over a track to inspect its true bearing and its angle with the meridian.",
+        note:"Spherical Earth (mean radius 6,371.0088 km); distances are in NM and km. Tracks are measured clockwise from true north (0–360°). Mercator makes loxodromes straight; Lambert conformal conic makes great circles approximately straight in suitable regions, but not perfectly. The shortest great-circle arc is non-unique for antipodal points.",
+        inspect:"Hover over a route to inspect its clockwise true track from north.",
         warning:"Endpoints are nearly identical or antipodal; the great-circle direction may be ambiguous.",
     },
     da:{
         title:"Ortodromer og loksodromer",
         subtitle:"Sammenlign den korteste vej på kuglen med en rute med konstant retvisende kurs.",
-        globe:"3D-globus",mercator:"Mercator",
+        globe:"3D-globus",mercator:"Mercator",lambert:"Lambert konform konisk",
         greatCircle:"Ortodrom · storcirkel",rhumb:"Loksodrom · kompaslinje",
         from:"A · Start",to:"B · Slutpunkt",lat:"Breddegrad",lon:"Længdegrad",
         pickFrom:"Vælg start",pickTo:"Vælg slutpunkt",selected:"Vælger",
-        instructions:"Træk for at dreje eller flytte · Vælg A eller B, og tryk for at placere punktet · Hold musen over en rute for at se vinklen med meridianen",
+        instructions:"Træk for at dreje eller flytte · Vælg A eller B, og tryk for at placere punktet · Hold musen over en rute for at se retvisende vinkel med uret fra nord",
         distance:"Distance",saving:"Ortodromen sparer",difference:"Forskel",
         departure:"Start-retvisende track",arrival:"Slut-retvisende track",constant:"Konstant retvisende track",
         transparency:"Gennemsigtig jord + storcirkelplan",
         fullRoutes:"Vis hele ruterne",
-        continuation:"Storcirklen slutter sig efter 360°. En loksodrom spiraler normalt uendeligt mod polerne, så forlængelsen vises til cirka ±89,8°.",
-        meridian:"til meridian",trueTrack:"retvisende track",
+        continuation:"Storcirklen slutter sig efter 360°. Loksodromen er uendelig; for at undgå et virvar af linjer vises højst én samlet omdrejning i længdegrad, eller mindre, hvis polerne nås først.",
+        trueTrack:"retvisende track",
         grid:"Bredde- og længdegrader",step:"Meridianer for hver",zoom:"Zoom",
         chooseRoute:"Eksempelrute",custom:"Egen rute",swap:"Byt A ↔ B",
-        note:"Kugleformet jord (middelradius 6.371,0088 km); afstande er i sømil (NM) og kilometer (km). Vinklerne måles på kuglen i forhold til meridianerne (længdegradslinjerne). Mercator er vinkelbevarende og viser loksodromer som rette linjer. Mellem antipodale punkter findes ingen entydig korteste storcirkel.",
-        inspect:"Hold musen over en rute for at se retvisende track og vinklen med meridianen.",
+        note:"Kugleformet jord (middelradius 6.371,0088 km); afstande er i NM og km. Trackvinkler måles med uret fra retvisende nord (0–360°). Mercator viser loksodromer som rette linjer, mens Lambert konform konisk viser storcirkler omtrent rette over passende områder – ikke helt præcist. Antipodale punkter har ingen entydig korteste storcirkel.",
+        inspect:"Hold musen over en rute for at se retvisende trackvinkel fra nord med uret.",
         warning:"Punkterne er næsten ens eller antipodale; ortodromens retning kan være ubestemt.",
     },
 } as const;
@@ -64,7 +64,7 @@ export default function OrthodromeLoxodrome() {
     const hoverLabels=useMemo(()=>({
         orthodrome:language==="da"?"Ortodrom":"Orthodrome",
         loxodrome:language==="da"?"Loksodrom":"Loxodrome",
-        meridian:t.meridian,trueTrack:t.trueTrack,
+        trueTrack:t.trueTrack,
     }),[language,t]);
     const [from,setFrom]=useState<GeoPoint>(PRESETS[0].from);
     const [to,setTo]=useState<GeoPoint>(PRESETS[0].to);
@@ -139,7 +139,7 @@ export default function OrthodromeLoxodrome() {
         </div>
         <div className="orthodrome-lab__tabs" role="group" aria-label="Projection">
             {([
-                ["globe",t.globe],["mercator",t.mercator],
+                ["globe",t.globe],["mercator",t.mercator],["lambert",t.lambert],
             ] as const).map(([id,label])=>
                 <button type="button" key={id} className={projection===id?"is-active":""}
                     aria-pressed={projection===id} onClick={()=>setProjection(id)}>{label}</button>
@@ -159,6 +159,21 @@ export default function OrthodromeLoxodrome() {
         </div>
         <div className="orthodrome-lab__hint" role="status">
             {hovered||t.instructions}
+        </div>
+        <div className="orthodrome-lab__options">
+            <label><input type="checkbox" checked={showFullRoutes} onChange={e=>setShowFullRoutes(e.currentTarget.checked)}/>{t.fullRoutes}</label>
+            <label><input type="checkbox" checked={translucent} onChange={e=>setTranslucent(e.currentTarget.checked)}/>{t.transparency}</label>
+            <label><input type="checkbox" checked={showGrid} onChange={e=>setShowGrid(e.currentTarget.checked)}/>{t.grid}</label>
+            <label>{t.step}
+                <select value={meridianStep} onChange={e=>setMeridianStep(Number(e.currentTarget.value))}>
+                    <option value={15}>15°</option><option value={30}>30°</option>
+                    <option value={45}>45°</option><option value={90}>90°</option>
+                </select>
+            </label>
+            <label>{t.zoom}
+                <input type="range" min="0.75" max="1.5" step="0.05"
+                    value={zoom} onChange={e=>setZoom(Number(e.currentTarget.value))}/>
+            </label>
         </div>
         <div className="orthodrome-lab__select">
             <label>{t.chooseRoute}
@@ -204,21 +219,7 @@ export default function OrthodromeLoxodrome() {
                 <small>{nf(percentage,2)}% · {t.difference}</small>
             </div>
         </div>
-        <div className="orthodrome-lab__options">
-            <label><input type="checkbox" checked={showFullRoutes} onChange={e=>setShowFullRoutes(e.currentTarget.checked)}/>{t.fullRoutes}</label>
-            <label><input type="checkbox" checked={translucent} onChange={e=>setTranslucent(e.currentTarget.checked)}/>{t.transparency}</label>
-            <label><input type="checkbox" checked={showGrid} onChange={e=>setShowGrid(e.currentTarget.checked)}/>{t.grid}</label>
-            <label>{t.step}
-                <select value={meridianStep} onChange={e=>setMeridianStep(Number(e.currentTarget.value))}>
-                    <option value={15}>15°</option><option value={30}>30°</option>
-                    <option value={45}>45°</option><option value={90}>90°</option>
-                </select>
-            </label>
-            <label>{t.zoom}
-                <input type="range" min="0.75" max="1.5" step="0.05"
-                    value={zoom} onChange={e=>setZoom(Number(e.currentTarget.value))}/>
-            </label>
-        </div>
+
         {showFullRoutes&&<p className="orthodrome-lab__footnote">{t.continuation}</p>}
         {ambiguous&&<p className="orthodrome-lab__warning">{t.warning}</p>}
         <p className="orthodrome-lab__footnote">{t.note}</p>

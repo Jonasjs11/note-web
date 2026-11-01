@@ -1,13 +1,15 @@
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import type {PointerEvent} from "react";
 import {
     add, clamp, completeGreatCircle, dot, extendedRhumbLine, fromVector, greatCirclePlane, localFrame,
-    meridianAngle, multiply, pointOnRoute, RAD, routeBearing, rhumbMeridianCrossings,
+    multiply, pointOnRoute, RAD, routeBearing, rhumbMeridianCrossings,
     toVector, unit, wrapLon,
 } from "./sphericalNavigation";
 import type {GeoPoint, RouteKind} from "./sphericalNavigation";
+import {createLambertProjection} from "./lambertConformalConic";
+import {fillFlatCountry,fillGlobeCountry} from "./countryFills";
 
-export type MapProjection = "globe" | "mercator";
+export type MapProjection = "globe" | "mercator" | "lambert";
 type ScreenPoint = {x:number;y:number;z:number;visible:boolean;lon:number};
 type RoutePixel = {x:number;y:number;t:number;visible:boolean;lon:number};
 type Hover = {kind:RouteKind;t:number;x:number;y:number};
@@ -15,7 +17,7 @@ type GlobeProps = {
     from:GeoPoint; to:GeoPoint; projection:MapProjection; translucent:boolean;
     meridianStep:number; showGrid:boolean; showFullRoutes:boolean;
     zoom:number; focus?:GeoPoint|null; picking:boolean;
-    hoverLabels?:{orthodrome:string;loxodrome:string;meridian:string;trueTrack:string};
+    hoverLabels?:{orthodrome:string;loxodrome:string;trueTrack:string};
     onPick:(point:GeoPoint)=>void; onHover?:(value:string)=>void;
 };
 type Camera = {lat:number;lon:number};
@@ -39,6 +41,7 @@ export default function GeographicViewport({
     const canvasRef=useRef<HTMLCanvasElement>(null);
     const [size,setSize]=useState({width:720,height:410});
     const [camera,setCamera]=useState<Camera>({lat:45,lon:-33});
+    const [lambertPan,setLambertPan]=useState({x:0,y:0});
     const [world,setWorld]=useState<number[][][]>([]);
     const [hover,setHover]=useState<Hover|null>(null);
     const [morph,setMorph]=useState(projection==="globe"?0:1);
@@ -54,6 +57,7 @@ export default function GeographicViewport({
         return ()=>{alive=false;};
     },[]);
     useEffect(()=>{if(focus)setCamera({lat:clamp(focus.lat,-80,80),lon:focus.lon});},[focus]);
+    useEffect(()=>{setLambertPan({x:0,y:0});},[from,to,projection]);
     useEffect(()=>{
         const node=canvasRef.current;
         if(!node)return;
@@ -92,24 +96,61 @@ export default function GeographicViewport({
         return {cx:w/2,cy:h/2,radius,mapWidth,mapHeight:mapWidth/2};
     },[size,zoom]);
 
+    // A real Lambert Conformal Conic (2SP) chart, recentered and fitted
+    // from both A→B paths. Fit uses the selected paths, never the full
+    // infinitely extended rhumb or all global country boundaries.
+    const lambert=useMemo(()=>{
+        const chart=createLambertProjection(from,to);
+        const samples=[] as {x:number;y:number}[];
+        for(const kind of ["greatCircle","rhumb"] as const)
+            for(let i=0;i<=160;i++)samples.push(chart.project(pointOnRoute(kind,from,to,i/160)));
+        let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+        for(const p of samples){
+            if(!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
+            minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);
+            minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);
+        }
+        if(!Number.isFinite(minX)){minX=-0.5;maxX=0.5;minY=-0.5;maxY=0.5;}
+        const spanX=Math.max(0.10,maxX-minX);
+        const spanY=Math.max(0.10,maxY-minY);
+        const scale=Math.min(size.width*0.82/spanX,size.height*0.79/spanY);
+        return {chart,scale,centerX:(minX+maxX)/2,centerY:(minY+maxY)/2};
+    },[from,to,size]);
+    const flatPoint=useCallback((point:GeoPoint,unwrappedLon?:number)=>{
+        const {cx,cy,mapWidth,mapHeight}=layout();
+        if(projection==="lambert"){
+            const p=lambert.chart.project(point,unwrappedLon);
+            return {x:cx+(p.x-lambert.centerX)*lambert.scale*zoom+lambertPan.x,
+                y:cy-(p.y-lambert.centerY)*lambert.scale*zoom+lambertPan.y};
+        }
+        const lon=(unwrappedLon===undefined?wrapLon(point.lon-camera.lon):unwrappedLon-camera.lon);
+        const latitude=clamp(point.lat,-MAX_LAT,MAX_LAT)*RAD;
+        return {x:cx+lon/360*mapWidth,
+            y:cy-Math.log(Math.tan(Math.PI/4+latitude/2))/Math.PI*mapHeight/2};
+    },[camera.lon,layout,projection,lambert,zoom,lambertPan]);
     const project=useCallback((p:GeoPoint):ScreenPoint=>{
-        const {cx,cy,radius,mapWidth,mapHeight}=layout();
-        const relative=wrapLon(p.lon-camera.lon);
+        const {cx,cy,radius}=layout();
+        const relative=wrapLon(p.lon-(projection==="lambert"?lambert.chart.lon0:camera.lon));
         const basis=localFrame(camera),v=toVector(p);
         const gx=cx+dot(v,basis.east)*radius;
         const gy=cy-dot(v,basis.north)*radius;
         const z=dot(v,basis.up);
-        const mx=cx+relative/180*mapWidth/2;
-        const my=cy-Math.log(Math.tan(Math.PI/4+clamp(p.lat,-MAX_LAT,MAX_LAT)*RAD/2))/Math.PI*mapHeight/2;
+        const flat=flatPoint(p);
         const visible=(z>=-0.002||translucent||morph>0.3)&&
-            (morph<0.8||Math.abs(p.lat)<=MAX_LAT+1e-6);
-        return {x:gx*(1-morph)+mx*morph,y:gy*(1-morph)+my*morph,
+            (morph<0.8||projection==="lambert"||Math.abs(p.lat)<=MAX_LAT+1e-6);
+        return {x:gx*(1-morph)+flat.x*morph,y:gy*(1-morph)+flat.y*morph,
             z,visible,lon:relative};
-    },[camera,layout,projection,morph,translucent]);
+    },[camera,layout,projection,morph,translucent,lambert,flatPoint]);
 
     const unproject=useCallback((x:number,y:number):GeoPoint|null=>{
         const {cx,cy,radius,mapWidth,mapHeight}=layout();
         if(projection!=="globe"){
+            if(projection==="lambert"){
+                const e=(x-cx-lambertPan.x)/(lambert.scale*zoom)+lambert.centerX;
+                const n=-(y-cy-lambertPan.y)/(lambert.scale*zoom)+lambert.centerY;
+                const geographic=lambert.chart.inverse(e,n);
+                return Number.isFinite(geographic.lat)&&Number.isFinite(geographic.lon)?geographic:null;
+            }
             const sx=(x-cx)/(mapWidth/2),sy=(cy-y)/(mapHeight/2);
             if(Math.abs(sx)>1||Math.abs(sy)>1)return null;
             const lat=(2*Math.atan(Math.exp(sy*Math.PI))-Math.PI/2)/RAD;
@@ -122,7 +163,7 @@ export default function GeographicViewport({
         const nz=Math.sqrt(Math.max(0,1-distance));
         const v=add(add(multiply(basis.east,nx),multiply(basis.north,ny)),multiply(basis.up,nz));
         return fromVector(unit(v));
-    },[camera,layout,projection]);
+    },[camera,layout,projection,lambert,lambertPan,zoom]);
 
     useEffect(()=>{
         const canvas=canvasRef.current;
@@ -140,7 +181,7 @@ export default function GeographicViewport({
         const pMap=morph;
         const inMap=projection!=="globe"&&morph>0.995;
         const inGlobe=projection==="globe"&&morph<0.005;
-        const mapLonBreak=(p:ScreenPoint,q:ScreenPoint)=>inMap&&Math.abs(p.lon-q.lon)>180;
+        const mapLonBreak=(p:ScreenPoint,q:ScreenPoint)=>inMap&&projection==="mercator"&&Math.abs(p.lon-q.lon)>180;
         const drawPath=(points:GeoPoint[],color:string,width:number,alpha=1,fill?:string,back=false)=>{
             if(points.length<2)return;
             ctx.beginPath();
@@ -184,9 +225,11 @@ export default function GeographicViewport({
         if(pMap>0){
             ctx.globalAlpha=pMap;
             ctx.fillStyle="#102b40";
-            ctx.fillRect(cx-mapWidth/2,cy-mapHeight/2,mapWidth,mapHeight);
+            if(projection==="lambert")ctx.fillRect(0,0,w,h);
+            else ctx.fillRect(cx-mapWidth/2,cy-mapHeight/2,mapWidth,mapHeight);
             ctx.strokeStyle="#4b819d";ctx.lineWidth=1;
-            ctx.strokeRect(cx-mapWidth/2,cy-mapHeight/2,mapWidth,mapHeight);
+            if(projection!=="lambert")
+                ctx.strokeRect(cx-mapWidth/2,cy-mapHeight/2,mapWidth,mapHeight);
             ctx.globalAlpha=1;
         }
         // These clips are only needed in the settled views.
@@ -194,13 +237,19 @@ export default function GeographicViewport({
         if(inGlobe){
             ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.clip();
         }else if(inMap){
-            ctx.beginPath();ctx.rect(cx-mapWidth/2,cy-mapHeight/2,mapWidth,mapHeight);ctx.clip();
+            ctx.beginPath();
+            if(projection==="lambert")ctx.rect(0,0,w,h);
+            else ctx.rect(cx-mapWidth/2,cy-mapHeight/2,mapWidth,mapHeight);
+            ctx.clip();
         }
 
-        // Country boundaries are stored locally; no third-party network request at runtime.
+        // Country polygon fill (including polygons crossing the globe's limb
+        // or the longitude seam) lives in its own clipping routines.
         for(const ring of world){
-            const shape=ring.map(([lon,lat])=>({lon,lat}));
-            drawPath(shape,"#a3d9d2",0.7,0.74,"#3d806c",false);
+            if(inGlobe)fillGlobeCountry(ring,ctx,camera,cx,cy,radius,translucent);
+            else if(inMap)fillFlatCountry(ring,ctx,projection==="lambert"?"lambert":"mercator",
+                projection==="lambert"?lambert.chart.lon0:camera.lon,flatPoint,mapWidth);
+            else drawPath(ring.map(([lon,lat])=>({lon,lat})),"#a3d9d2",0.7,0.74,"#3d806c");
         }
 
         if(showGrid){
@@ -247,7 +296,7 @@ export default function GeographicViewport({
             ctx.beginPath();let started=false;
             for(let i=0;i<pixels.length;i++){
                 const p=pixels[i],previous=pixels[i-1];
-                if(!p.visible||(previous&&inMap&&Math.abs(p.lon-previous.lon)>180))started=false;
+                if(!p.visible||(previous&&mapLonBreak(p,previous)))started=false;
                 if(p.visible){
                     if(started)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);
                     started=true;
@@ -282,13 +331,12 @@ export default function GeographicViewport({
         const crossings=rhumbMeridianCrossings(from,to,meridianStep);
         const markArc=(p:GeoPoint,heading:number,radiusArc:number)=>{
             const {east,north,up}=localFrame(p);
-            // Use the nearest north/south meridian direction, making the
-            // visible arc equal to the acute angle displayed on hover.
-            const start=Math.cos(heading*RAD)>=0?0:180;
-            const delta=((heading-start+540)%360)-180;
+            // True track is measured clockwise from north, 0–360°.
+            // Do not shorten reflex angles to their acute/nearest-meridian arc.
             const arc:GeoPoint[]=[];
-            for(let j=0;j<=16;j++){
-                const angle=(start+delta*j/16)*RAD;
+            const steps=Math.max(8,Math.ceil(heading/4));
+            for(let j=0;j<=steps;j++){
+                const angle=heading*j/steps*RAD;
                 const tangent=add(multiply(north,Math.cos(angle)),multiply(east,Math.sin(angle)));
                 arc.push(fromVector(unit(add(multiply(up,Math.cos(radiusArc)),
                     multiply(tangent,Math.sin(radiusArc))))));
@@ -348,8 +396,7 @@ export default function GeographicViewport({
         if(hover){
             const bearing=routeBearing(hover.kind,from,to,hover.t);
             const name=hover.kind==="rhumb"?(hoverLabels?.loxodrome??"Loxodrome"):(hoverLabels?.orthodrome??"Orthodrome");
-            const label=name+"  "+formatAngle(bearing)+" "+(hoverLabels?.trueTrack??"true")+
-                "   ·   "+formatAngle(meridianAngle(bearing))+" "+(hoverLabels?.meridian??"to meridian");
+            const label=name+"  "+formatAngle(bearing)+" "+(hoverLabels?.trueTrack??"true track");
             ctx.font="12px system-ui,sans-serif";ctx.textAlign="left";
             const width=Math.min(w-16,ctx.measureText(label).width+20);
             const x=clamp(hover.x-width/2,8,w-width-8);
@@ -358,7 +405,7 @@ export default function GeographicViewport({
             ctx.beginPath();ctx.roundRect(x,y,width,30,7);ctx.fill();
             ctx.fillStyle="#ffffff";ctx.fillText(label,x+10,y+19,width-19);
         }
-    },[size,camera,project,layout,from,to,world,morph,projection,translucent,meridianStep,showGrid,showFullRoutes,hover,zoom,hoverLabels]);
+    },[size,camera,project,layout,from,to,world,morph,projection,translucent,meridianStep,showGrid,showFullRoutes,hover,zoom,hoverLabels,lambert,flatPoint]);
 
     const onPointerDown=(event:PointerEvent<HTMLCanvasElement>)=>{
         event.currentTarget.setPointerCapture(event.pointerId);
@@ -373,7 +420,8 @@ export default function GeographicViewport({
             if(Math.hypot(dx,dy)>2)drag.moved=true;
             if(drag.moved){
                 const {radius,mapWidth}=layout();
-                setCamera(c=>({
+                if(projection==="lambert")setLambertPan(p=>({x:p.x+dx,y:p.y+dy}));
+                else setCamera(c=>({
                     lat:projection==="globe"?clamp(c.lat+dy*90/radius,-83,83):c.lat,
                     lon:wrapLon(c.lon-dx*(projection==="globe"?105/radius:360/mapWidth)),
                 }));
@@ -387,7 +435,7 @@ export default function GeographicViewport({
             for(let i=1;i<route.points.length;i++){
                 const a=route.points[i-1],b=route.points[i];
                 if(!a.visible||!b.visible)continue;
-                if(projection!=="globe"&&Math.abs(a.lon-b.lon)>180)continue;
+                if(projection==="mercator"&&Math.abs(a.lon-b.lon)>180)continue;
                 const vx=b.x-a.x,vy=b.y-a.y;
                 const d=vx*vx+vy*vy;
                 if(d<0.01)continue;
@@ -401,8 +449,7 @@ export default function GeographicViewport({
             const {kind,t}=best;
             setHover({kind,t,x:pos.x,y:pos.y});
             onHover?.((kind==="rhumb"?(hoverLabels?.loxodrome??"Loxodrome"):(hoverLabels?.orthodrome??"Orthodrome"))+
-                ": "+formatAngle(routeBearing(kind,from,to,t))+" "+(hoverLabels?.trueTrack??"true")+"; "+
-                formatAngle(meridianAngle(routeBearing(kind,from,to,t)))+" "+(hoverLabels?.meridian??"to meridian"));
+                ": "+formatAngle(routeBearing(kind,from,to,t))+" "+(hoverLabels?.trueTrack??"true track"));
         }else{
             setHover(null);onHover?.("");
         }

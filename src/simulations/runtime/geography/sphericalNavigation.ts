@@ -115,19 +115,32 @@ export function extendedRhumbLine(a:GeoPoint,b:GeoPoint,psiLimit=6.3):RouteSampl
     const dlon=deltaLongitude(a.lon,b.lon);
     if(Math.abs(dpsi)<1e-9){
         if(Math.abs(dlon)<1e-9)return [];
-        const steps=720;
-        return Array.from({length:steps+1},(_,i)=>{
-            const t=(Math.sign(dlon)*360*i/steps)/dlon;
+        // A due-east/west rhumb is the entire closed latitude circle.
+        return Array.from({length:721},(_,i)=>{
+            const t=(Math.sign(dlon)*360*i/720)/dlon;
             return {point:rhumbPoint(a,b,t),t};
         });
     }
-    const psiA=mercatorY(a.lat);
-    const minPsi=-Math.abs(psiLimit), maxPsi=Math.abs(psiLimit);
-    const turns=Math.abs((maxPsi-minPsi)*dlon/dpsi/360);
-    const steps=Math.min(2800,Math.max(720,Math.ceil(turns*240)));
+    const psiA=mercatorY(a.lat), psiB=mercatorY(b.lat);
+    let tMin=Math.min((-Math.abs(psiLimit)-psiA)/dpsi,
+                      (Math.abs(psiLimit)-psiA)/dpsi);
+    let tMax=Math.max((-Math.abs(psiLimit)-psiA)/dpsi,
+                      (Math.abs(psiLimit)-psiA)/dpsi);
+    // The mathematical loxodrome never ends. Limit the displayed continuation
+    // to ONE full longitude revolution in total. Otherwise almost-east/west
+    // cases (e.g. Cape Town–Sydney) draw hundreds of nearly overlapping loops.
+    if(Math.abs(dlon)>1e-10){
+        const fullTurn=Math.max(1,360/Math.abs(dlon));
+        const center=0.5;
+        tMin=Math.max(tMin,center-fullTurn/2);
+        tMax=Math.min(tMax,center+fullTurn/2);
+    }
+    // Preserve the original A→B segment even in extreme cases.
+    tMin=Math.min(tMin,0);
+    tMax=Math.max(tMax,1);
+    const steps=Math.max(160,Math.min(720,Math.ceil((tMax-tMin)*Math.abs(dlon)*2)));
     return Array.from({length:steps+1},(_,i)=>{
-        const psi=minPsi+(maxPsi-minPsi)*i/steps;
-        const t=(psi-psiA)/dpsi;
+        const t=tMin+(tMax-tMin)*i/steps;
         return {point:rhumbPoint(a,b,t),t};
     });
 }
