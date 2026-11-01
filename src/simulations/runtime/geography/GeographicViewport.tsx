@@ -181,7 +181,7 @@ export default function GeographicViewport({
         const pMap=morph;
         const inMap=projection!=="globe"&&morph>0.995;
         const inGlobe=projection==="globe"&&morph<0.005;
-        const mapLonBreak=(p:ScreenPoint,q:ScreenPoint)=>inMap&&projection==="mercator"&&Math.abs(p.lon-q.lon)>180;
+        const mapLonBreak=(p:{lon:number},q:{lon:number})=>inMap&&projection==="mercator"&&Math.abs(p.lon-q.lon)>180;
         const drawPath=(points:GeoPoint[],color:string,width:number,alpha=1,fill?:string,back=false)=>{
             if(points.length<2)return;
             ctx.beginPath();

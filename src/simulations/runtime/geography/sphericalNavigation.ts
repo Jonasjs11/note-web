@@ -121,7 +121,7 @@ export function extendedRhumbLine(a:GeoPoint,b:GeoPoint,psiLimit=6.3):RouteSampl
             return {point:rhumbPoint(a,b,t),t};
         });
     }
-    const psiA=mercatorY(a.lat), psiB=mercatorY(b.lat);
+    const psiA=mercatorY(a.lat);
     let tMin=Math.min((-Math.abs(psiLimit)-psiA)/dpsi,
                       (Math.abs(psiLimit)-psiA)/dpsi);
     let tMax=Math.max((-Math.abs(psiLimit)-psiA)/dpsi,
