@@ -329,6 +329,7 @@ export default function GeographicViewport({
 
         const bearing=routeBearing("rhumb",from,to,0);
         const crossings=rhumbMeridianCrossings(from,to,meridianStep);
+        const labels:{x:number;y:number;text:string;color:string;priority:number}[]=[];
         const markArc=(p:GeoPoint,heading:number,radiusArc:number)=>{
             const {east,north,up}=localFrame(p);
             // True track is measured clockwise from north, 0–360°.
@@ -350,9 +351,8 @@ export default function GeographicViewport({
             ctx.fillStyle=LOXODROME;ctx.fill();
             if(meridianStep>=15)markArc(crossings[i],bearing,0.085);
             if(meridianStep>=30|| (meridianStep>=15&&i%2===0)){
-                ctx.font="11px system-ui,sans-serif";
-                ctx.textAlign="left";ctx.fillStyle="#ffe1b5";
-                ctx.fillText(Math.round(bearing)+"°",pos.x+7,pos.y-8);
+                labels.push({x:pos.x,y:pos.y,text:Math.round(bearing)+"°",
+                    color:"#ffe1b5",priority:1});
             }
         }
 
@@ -362,8 +362,8 @@ export default function GeographicViewport({
             ctx.beginPath();ctx.arc(at.x,at.y,6.2,0,Math.PI*2);
             ctx.fillStyle=i===0?"#74e5b5":"#ffd08d";ctx.fill();
             ctx.lineWidth=2;ctx.strokeStyle="#102031";ctx.stroke();
-            ctx.font="bold 12px system-ui,sans-serif";ctx.textAlign="center";
-            ctx.fillStyle="#ffffff";ctx.fillText(i===0?"A":"B",at.x,at.y-13);
+            labels.push({x:at.x,y:at.y,text:i===0?"A":"B",
+                color:i===0?"#74e5b5":"#ffd08d",priority:0});
         }
 
         if(hover){
@@ -393,17 +393,90 @@ export default function GeographicViewport({
         }
         ctx.restore();
 
+        // Render text as foreground overlay AFTER all grid, tracks, guides,
+        // and point markers. Placement tests both other labels and routes.
+        // Opaque chips keep text legible even in crowded polar situations.
+        type Rect={left:number;right:number;top:number;bottom:number};
+        const occupied:Rect[]=[];
+        const hoverHeading=hover?routeBearing(hover.kind,from,to,hover.t):0;
+        const hoverTitle=hover
+            ?(hover.kind==="rhumb"?(hoverLabels?.loxodrome??"Loxodrome"):
+                (hoverLabels?.orthodrome??"Orthodrome"))+
+                "  "+formatAngle(hoverHeading)+" "+(hoverLabels?.trueTrack??"true track")
+            :"";
+        ctx.font="12px system-ui,sans-serif";
+        const hoverWidth=hover?Math.min(w-16,ctx.measureText(hoverTitle).width+22):0;
+        const hoverBox:Rect={left:w-hoverWidth-9,right:w-9,top:9,bottom:42};
+        if(hover)occupied.push(hoverBox);
+        const markerCenters=[from,to].map(project).filter(p=>p.visible);
+        const intersects=(a:Rect,b:Rect)=>
+            Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left))*
+            Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
+        const collidesWithLine=(rect:Rect)=>{
+            let score=0;
+            for(const route of routePixels){
+                for(let i=0;i<route.points.length;i+=3){
+                    const p=route.points[i];
+                    if(p.visible&&p.x>=rect.left-2&&p.x<=rect.right+2&&
+                       p.y>=rect.top-2&&p.y<=rect.bottom+2)score+=1;
+                }
+            }
+            return score;
+        };
+        labels.sort((a,b)=>a.priority-b.priority);
+        for(const label of labels){
+            ctx.font=label.priority===0?"bold 12px system-ui,sans-serif":"bold 11px system-ui,sans-serif";
+            const width=Math.ceil(ctx.measureText(label.text).width)+16;
+            const height=22;
+            const offsets=[
+                [0,-27],[0,27],[width/2+19,0],[-width/2-19,0],
+                [width/2+12,-26],[-width/2-12,-26],
+                [width/2+12,26],[-width/2-12,26],
+                [0,-47],[0,47],
+            ];
+            let selected:Rect|null=null,best=Infinity;
+            for(const [dx,dy] of offsets){
+                const left=label.x+dx-width/2,top=label.y+dy-height/2;
+                const rect={left,right:left+width,top,bottom:top+height};
+                const offscreen=Math.max(0,8-rect.left)+Math.max(0,rect.right-(w-8))+
+                    Math.max(0,8-rect.top)+Math.max(0,rect.bottom-(h-8));
+                let overlap=occupied.reduce((sum,box)=>sum+intersects(rect,box),0);
+                for(const marker of markerCenters){
+                    const markerBox={left:marker.x-8,right:marker.x+8,
+                        top:marker.y-8,bottom:marker.y+8};
+                    overlap+=intersects(rect,markerBox);
+                }
+                const score=offscreen*1000+overlap*14+
+                    collidesWithLine(rect)*25+Math.hypot(dx,dy)*0.15;
+                if(score<best){best=score;selected=rect;}
+            }
+            if(!selected)continue;
+            occupied.push(selected);
+            ctx.beginPath();
+            ctx.roundRect(selected.left,selected.top,width,height,6);
+            ctx.fillStyle="rgba(11,29,42,0.97)";
+            ctx.fill();
+            ctx.lineWidth=1;
+            ctx.strokeStyle=label.priority===0?label.color:"rgba(255,255,255,0.25)";
+            ctx.stroke();
+            ctx.fillStyle=label.color;
+            ctx.textBaseline="middle";
+            ctx.textAlign="center";
+            ctx.fillText(label.text,(selected.left+selected.right)/2,
+                (selected.top+selected.bottom)/2);
+        }
+        ctx.textBaseline="alphabetic";
         if(hover){
-            const bearing=routeBearing(hover.kind,from,to,hover.t);
-            const name=hover.kind==="rhumb"?(hoverLabels?.loxodrome??"Loxodrome"):(hoverLabels?.orthodrome??"Orthodrome");
-            const label=name+"  "+formatAngle(bearing)+" "+(hoverLabels?.trueTrack??"true track");
-            ctx.font="12px system-ui,sans-serif";ctx.textAlign="left";
-            const width=Math.min(w-16,ctx.measureText(label).width+20);
-            const x=clamp(hover.x-width/2,8,w-width-8);
-            const y=clamp(hover.y-53,8,h-31);
-            ctx.fillStyle="rgba(12,25,39,0.94)";
-            ctx.beginPath();ctx.roundRect(x,y,width,30,7);ctx.fill();
-            ctx.fillStyle="#ffffff";ctx.fillText(label,x+10,y+19,width-19);
+            ctx.font="12px system-ui,sans-serif";
+            ctx.textAlign="left";
+            ctx.fillStyle="rgba(11,27,41,0.98)";
+            ctx.beginPath();
+            ctx.roundRect(hoverBox.left,hoverBox.top,hoverWidth,33,7);
+            ctx.fill();
+            ctx.strokeStyle="rgba(255,255,255,0.35)";
+            ctx.stroke();
+            ctx.fillStyle="#ffffff";
+            ctx.fillText(hoverTitle,hoverBox.left+11,hoverBox.top+21,hoverWidth-20);
         }
     },[size,camera,project,layout,from,to,world,morph,projection,translucent,meridianStep,showGrid,showFullRoutes,hover,zoom,hoverLabels,lambert,flatPoint]);
 

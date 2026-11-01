@@ -75,41 +75,115 @@ export function fillGlobeCountry(
 }
 
 /**
- * Unwrap each polygon ring before plotting it, then make wrapped copies on
- * Mercator. Canvas clipping handles the visible chart edge during filling.
+ * Clip polygons in longitude/latitude *before* projecting them.
+ *
+ * Longitude-latitude charts are cut at their ±180° seam, and Mercator is
+ * clipped to ±85° latitude. Closing an Antarctic polygon directly across the
+ * longitude seam would fill a giant rectangular region outside the continent.
+ * In Lambert, unbounded global polygons would extend/overlap outside the
+ * useful local conic chart. Both are prevented by the geographic clip.
  */
+type LonLat={lon:number;lat:number};
+
+function clipEdge(
+    vertices:LonLat[],
+    axis:"lat"|"lon",
+    boundary:number,
+    keepGreater:boolean,
+):LonLat[]{
+    if(vertices.length===0)return [];
+    const inside=(p:LonLat)=>keepGreater?p[axis]>=boundary:p[axis]<=boundary;
+    const result:LonLat[]=[];
+    let prev=vertices[vertices.length-1];
+    for(const current of vertices){
+        const prevInside=inside(prev),currentInside=inside(current);
+        if(prevInside!==currentInside){
+            const denominator=current[axis]-prev[axis];
+            if(Math.abs(denominator)>1e-12){
+                const t=(boundary-prev[axis])/denominator;
+                result.push({
+                    lon:prev.lon+(current.lon-prev.lon)*t,
+                    lat:prev.lat+(current.lat-prev.lat)*t,
+                });
+            }
+        }
+        if(currentInside)result.push(current);
+        prev=current;
+    }
+    return result;
+}
+function clipGeography(polygon:LonLat[],minLon:number,maxLon:number,minLat:number,maxLat:number){
+    return clipEdge(
+        clipEdge(
+            clipEdge(
+                clipEdge(polygon,"lon",minLon,true),
+            "lon",maxLon,false),
+        "lat",minLat,true),
+    "lat",maxLat,false);
+}
+
+function unwrapCountry(ring:number[][],centralLon:number):LonLat[]{
+    let previous=wrapLon(ring[0][0]-centralLon);
+    const points:LonLat[]=[];
+    for(let i=0;i<ring.length;i++){
+        const [lon,lat]=ring[i];
+        if(i>0){
+            let difference=wrapLon(lon-centralLon)-wrapLon(previous);
+            if(difference>180)difference-=360;
+            if(difference< -180)difference+=360;
+            previous+=difference;
+        }
+        points.push({lon:centralLon+previous,lat});
+    }
+    // A polar continent wraps the meridian once. Its coastline's first and
+    // last vertices coincide geographically but differ by 360° after
+    // unwrapping. Finish via the chart's polar boundary, NOT with a diagonal
+    // directly connecting the coast ends (the Antarctica rectangle bug).
+    const winding=points[points.length-1].lon-points[0].lon;
+    const nearSouth=points.every(p=>p.lat< -45);
+    const nearNorth=points.every(p=>p.lat>45);
+    if(Math.abs(winding)>300&&(nearSouth||nearNorth)){
+        const cap=nearSouth?-85:85;
+        points.push(
+            {lon:points[points.length-1].lon,lat:cap},
+            {lon:points[0].lon,lat:cap},
+        );
+    }
+    return points;
+}
+
+/** Draw a clipped land polygon in the selected flat projection. */
 export function fillFlatCountry(
     ring:number[][],ctx:CanvasRenderingContext2D,
     projection:"mercator"|"lambert",centralLon:number,
     project:(point:GeoPoint,longitude?:number)=>{x:number;y:number},
-    mapWidth:number,
+    _mapWidth:number,
 ):void{
     if(ring.length<3)return;
-    const unwrapped:GeoPoint[]=[];
-    let previous=wrapLon(ring[0][0]-centralLon);
-    for(let i=0;i<ring.length;i++){
-        const [lon,lat]=ring[i];
-        const relative=wrapLon(lon-centralLon);
-        if(i>0){
-            let delta=relative-wrapLon(previous);
-            if(delta>180)delta-=360;
-            if(delta< -180)delta+=360;
-            previous+=delta;
-        }
-        unwrapped.push({lon:centralLon+previous,lat});
-    }
-    // Lambert has a longitude seam too, but is conic rather than cylindrical.
-    const shifts=projection==="mercator"?[-360,0,360]:[-360,0,360];
-    for(const shift of shifts){
-        const pts=unwrapped.map(p=>project(p,p.lon+shift));
-        if(pts.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)||
-            Math.abs(p.x)>200000||Math.abs(p.y)>200000))continue;
-        // Very distant wraps never touch the chart; skip for performance.
-        const minX=Math.min(...pts.map(p=>p.x)),maxX=Math.max(...pts.map(p=>p.x));
-        if(projection==="mercator"&&maxX< -mapWidth*1.5)continue;
-        if(projection==="mercator"&&minX> mapWidth*2.5)continue;
+    const unwrapped=unwrapCountry(ring,centralLon);
+    const latLimit=85;
+    // A local Lambert chart is a single conical sheet, not a world map.
+    // Restrict longitude to the part of the sheet around its central meridian.
+    const lonLimit=projection==="lambert"?125:180;
+    const minLon=centralLon-lonLimit,maxLon=centralLon+lonLimit;
+    const viewportWidth=ctx.canvas.clientWidth||ctx.canvas.width;
+    const viewportHeight=ctx.canvas.clientHeight||ctx.canvas.height;
+    for(const shift of [-360,0,360]){
+        const shifted=unwrapped.map(p=>({lon:p.lon+shift,lat:p.lat}));
+        const lons=shifted.map(p=>p.lon);
+        if(Math.max(...lons)<minLon||Math.min(...lons)>maxLon)continue;
+        const clipped=clipGeography(shifted,minLon,maxLon,-latLimit,latLimit);
+        if(clipped.length<3)continue;
+        const pts=clipped.map(p=>project(p,p.lon));
+        if(pts.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))continue;
+        const left=Math.min(...pts.map(p=>p.x)),right=Math.max(...pts.map(p=>p.x));
+        const top=Math.min(...pts.map(p=>p.y)),bottom=Math.max(...pts.map(p=>p.y));
+        if(right< -3||left>viewportWidth+3||bottom< -3||top>viewportHeight+3)continue;
         ctx.beginPath();
-        pts.forEach((p,i)=>{if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+        for(let i=0;i<pts.length;i++){
+            const p=pts[i];
+            if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);
+        }
         paint(ctx,0.73);
     }
 }

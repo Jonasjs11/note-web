@@ -49,7 +49,8 @@
 .orthodrome-lab__statistics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;padding:0 1rem 1rem;}
 .orthodrome-lab__metric{display:flex;flex-direction:column;gap:.35rem;padding:.85rem;border:1px solid var(--simulation-border);border-radius:.8rem;background:var(--simulation-control);min-width:0;}
 .orthodrome-lab__metric>span{font-size:.72rem;color:var(--simulation-muted);}
-.orthodrome-lab__metric strong{font-size:clamp(1.1rem,2.3vw,1.6rem);font-weight:750;white-space:nowrap;letter-spacing:-.035em;}
+.orthodrome-lab__metric strong{font-size:clamp(1rem,1.85vw,1.3rem);font-weight:730;white-space:nowrap;letter-spacing:-.025em;}
+.orthodrome-lab__values{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:1rem;row-gap:.2rem;}
 .orthodrome-lab__metric small{font-size:.69rem;color:var(--simulation-muted);}
 .orthodrome-lab__metric:first-child strong{color:#3dbfd6;}
 .orthodrome-lab__metric:nth-child(2) strong{color:#df8740;}
@@ -67,6 +68,6 @@
     .orthodrome-lab__stage{height:340px;}
     .orthodrome-points{grid-template-columns:1fr;}
     .orthodrome-lab__statistics{grid-template-columns:1fr;}
-    .orthodrome-lab__metric strong{font-size:1.3rem;}
+    .orthodrome-lab__metric strong{font-size:1.15rem;}
     .orthodrome-lab__metric{gap:.2rem;}
 }

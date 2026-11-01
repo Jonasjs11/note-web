@@ -171,7 +171,7 @@ export default function OrthodromeLoxodrome() {
                 </select>
             </label>
             <label>{t.zoom}
-                <input type="range" min="0.75" max="1.5" step="0.05"
+                <input type="range" min="0.55" max="2.8" step="0.05"
                     value={zoom} onChange={e=>setZoom(Number(e.currentTarget.value))}/>
             </label>
         </div>
@@ -201,27 +201,30 @@ export default function OrthodromeLoxodrome() {
         <div className="orthodrome-lab__statistics">
             <div className="orthodrome-lab__metric">
                 <span>{t.greatCircle}</span>
-                <strong>{nf(gc,1)} NM</strong>
-                <small>{nf(gc*1.852,1)} km</small>
+                <div className="orthodrome-lab__values">
+                    <strong>{nf(gc,1)} NM</strong>
+                    <strong>{nf(gc*1.852,1)} km</strong>
+                </div>
                 <small>{t.departure}: {heading(greatCircleBearing(from,to,0))}</small>
                 <small>{t.arrival}: {heading(greatCircleBearing(from,to,1))}</small>
             </div>
             <div className="orthodrome-lab__metric">
                 <span>{t.rhumb}</span>
-                <strong>{nf(rhumb,1)} NM</strong>
-                <small>{nf(rhumb*1.852,1)} km</small>
+                <div className="orthodrome-lab__values">
+                    <strong>{nf(rhumb,1)} NM</strong>
+                    <strong>{nf(rhumb*1.852,1)} km</strong>
+                </div>
                 <small>{t.constant}: {heading(initialRhumbBearing(from,to))}</small>
             </div>
             <div className="orthodrome-lab__metric orthodrome-lab__metric--saving">
                 <span>{t.saving}</span>
-                <strong>{nf(saved,1)} NM</strong>
-                <small>{nf(saved*1.852,1)} km</small>
+                <div className="orthodrome-lab__values">
+                    <strong>{nf(saved,1)} NM</strong>
+                    <strong>{nf(saved*1.852,1)} km</strong>
+                </div>
                 <small>{nf(percentage,2)}% · {t.difference}</small>
             </div>
         </div>
 
-        {showFullRoutes&&<p className="orthodrome-lab__footnote">{t.continuation}</p>}
-        {ambiguous&&<p className="orthodrome-lab__warning">{t.warning}</p>}
-        <p className="orthodrome-lab__footnote">{t.note}</p>
     </section>;
 }
